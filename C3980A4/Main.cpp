@@ -12,8 +12,10 @@ PROGRAM HEADER HERE
 char programName[] = "C3980 A4";
 LPCSTR lpszCommName = "COM1";
 
+HANDLE port;
 HANDLE timerThread;
 HWND hwnd;
+boolean connectMode = false;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
@@ -79,10 +81,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		switch (LOWORD(wParam))
 		{
 		case (MENU_CONNECT):
-			
+			connectMode = true;
+
+			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0,
+				NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
+				== INVALID_HANDLE_VALUE)
+			{
+				MessageBox(NULL, "Error opening COM port:", "", MB_OK);
+				return FALSE;
+			}
+
 			break;
 		case (MENU_DISCONNECT):
-			
+			connectMode = false;
 			break;
 		case (MENU_QUIT):
 			
