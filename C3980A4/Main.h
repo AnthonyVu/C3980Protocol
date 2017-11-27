@@ -12,3 +12,4 @@
 
 #define windowHeight			600
 #define windowWidth				400
+#define POLY					0x82f63b78

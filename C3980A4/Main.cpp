@@ -14,11 +14,12 @@ LPCSTR lpszCommName = "COM1";
 
 HANDLE timerThread;
 HWND hwnd;
+bool linkReset;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
 VOID startTimer();
-
+DWORD32 crc32c(DWORD32 crc, const char *buf, size_t len);
 
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
@@ -61,7 +62,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 }
 
 
-
 VOID startTimer()
 {
 	SetTimer(hwnd, TIMER_TEST, TEST_TIMEOUT, (TIMERPROC)NULL);
@@ -79,13 +79,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		switch (LOWORD(wParam))
 		{
 		case (MENU_CONNECT):
-			
+
 			break;
 		case (MENU_DISCONNECT):
-			
+
 			break;
 		case (MENU_QUIT):
-			
+
 			PostQuitMessage(0);
 			break;
 		}
@@ -94,11 +94,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		hdc = BeginPaint(hwnd, &paintstruct);
 		break;
 	case WM_DESTROY:
-		
+
 		PostQuitMessage(0);
 		break;
 	default:
 		return DefWindowProc(hwnd, Message, wParam, lParam);
 	}
 	return 0;
+}
+
+DWORD32 crc32c(DWORD32 crc, const char *buf, size_t len)
+{
+	int k;
+
+	crc = ~crc;
+	while (len--) {
+		crc ^= *buf++;
+		for (k = 0; k < 8; k++)
+			crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+	}
+	return ~crc;
+}
+
+BOOLEAN Validation(DWORD32 receivedCrc, const char *buf, size_t len)
+{
+	DWORD crc = crc32c(0, buf, len);
+	if (crc == receivedCrc)
+		return true;
+	return false;
 }
