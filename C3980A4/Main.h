@@ -6,9 +6,13 @@
 #define RECEIVE_TIMEOUT		2000
 #define TEST_TIMEOUT		1000
 
-bool timeout = false;
-bool linkedReset = false;
+#define MENU_CONNECT			103
+#define MENU_DISCONNECT			104
+#define MENU_QUIT				105
 
-VOID startTimer();
-LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
-void bidForLine();
+#define windowHeight			600
+#define windowWidth				400
+
+extern bool timeout;
+extern bool linkedReset;
+extern char * inputBuffer;

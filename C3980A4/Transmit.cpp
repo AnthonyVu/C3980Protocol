@@ -1,12 +1,18 @@
-#include <stdio.h>
-#include <Windows.h>
 #include "Header.h"
 #include "Main.h"
 #include "Receive.h"
 #include "Transmit.h"
 #include "Print.h"
 
-void prepareToSend()
+
+extern bool sentCtrl = false;
+extern int sent = 0;
+extern bool eot = false;
+extern char control[2] = {0};
+extern char line[518] = { 0 };
+FILE * filePtr = NULL;
+
+void prepareToSend(FILE *outputBuffer)
 {
 	sentCtrl = false;
 	while (sentCtrl == false)
@@ -44,13 +50,13 @@ void addData()
 	bool eof = false;
 	while (count != 512)
 	{
-		if (eof == true || (c = fgetc(filePtr)) != EOF)
+		if (eof == false && (c = fgetc(filePtr)) != EOF)
 		{
 			line[count] = (char)c;
-			eof = true;
 		}
 		else
 		{
+			eof = true;
 			eot = true;
 			line[count] = '\0';
 		}
@@ -63,7 +69,7 @@ void send()
 	int retransmitCount = 0;
 	while (retransmitCount < 3)
 	{
-		startTimer();
+		//startTimer();
 		if (eot == true)
 		{
 			sent = 0;

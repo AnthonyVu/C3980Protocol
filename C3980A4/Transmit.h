@@ -1,14 +1,14 @@
 #pragma once
-void prepareToSend();
+#include <stdio.h>
+#include <Windows.h>
+
+void prepareToSend(FILE *outputBuffer);
 void addData();
 void send();
 void addCRC();
 
-bool sentCtrl = false;
-int sent = 0;
-bool eot = false;
-char control[2];
-FILE *filePtr;
-char line[518];
-FILE * outputBuffer;
-char * inputBuffer;
+extern bool sentCtrl;
+extern int sent;
+extern bool eot;
+extern char control[2];
+extern char line[518];

@@ -123,6 +123,9 @@
     <ClCompile Include="Receive.cpp" />
     <ClCompile Include="Transmit.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\commandMenu.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
