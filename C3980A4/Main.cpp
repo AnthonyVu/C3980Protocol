@@ -43,3 +43,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 }
+
+void bidForLine()
+{
+	startTimer();
+	while (timeout != true)
+	{
+		if (inputBuffer != NULL)
+		{
+			if (inputBuffer[1] == 6)
+			{
+				timeout = true;
+				prepareToSend();
+			}
+		}
+	}
+	linkedReset = true;
+}
