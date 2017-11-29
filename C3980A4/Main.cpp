@@ -14,13 +14,17 @@ LPCSTR lpszCommName = "COM1";
 
 HANDLE timerThread;
 HWND hwnd;
-bool linkReset;
+bool linkReset = true;
+bool timeout;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
 VOID startTimer();
-DWORD32 crc32c(DWORD32 crc, const char *buf, size_t len);
-
+DWORD32 crc32c(DWORD32, const char *, size_t);
+BOOLEAN Validation(DWORD32, const char *, size_t);
+VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
+VOID Idle();
+VOID Acknowledge();
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
 {
@@ -44,9 +48,9 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	Wcl.cbClsExtra = 0;
 	Wcl.cbWndExtra = 0;
 
+	Idle();
 	if (!RegisterClassEx(&Wcl))
 		return 0;
-
 
 	hwnd = CreateWindow(programName, programName, WS_OVERLAPPEDWINDOW, 10, 10, windowWidth, windowHeight, NULL, NULL, hInst, NULL);
 	ShowWindow(hwnd, nCmdShow);
@@ -64,7 +68,12 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 
 VOID startTimer()
 {
-	SetTimer(hwnd, TIMER_TEST, TEST_TIMEOUT, (TIMERPROC)NULL);
+	timeout = false;
+	SetTimer(hwnd, TIMER_TEST, TEST_TIMEOUT, TimerProc);
+}
+
+VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
+	timeout = true;
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -116,10 +125,25 @@ DWORD32 crc32c(DWORD32 crc, const char *buf, size_t len)
 	return ~crc;
 }
 
-BOOLEAN Validation(DWORD32 receivedCrc, const char *buf, size_t len)
+BOOLEAN Validation(DWORD32 originalCrc, const char *inputBuf, size_t inputBufLen)
 {
-	DWORD crc = crc32c(0, buf, len);
-	if (crc == receivedCrc)
-		return true;
-	return false;
+	DWORD32 crc = crc32c(0, inputBuf, inputBufLen);
+	return crc == originalCrc;
+}
+
+VOID Idle()
+{
+	if (linkReset)
+	{
+		startTimer();
+		while (timeout != true)
+		{
+			
+		}
+	}
+}
+
+VOID Acknowledge()
+{
+
 }
