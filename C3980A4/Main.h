@@ -1,4 +1,7 @@
 #pragma once
+#define STRICT
+#include <Windows.h>
+
 #define IDT_TIMER1			101
 #define IDT_TIMER2			102
 #define TIMER_TEST			999
@@ -16,3 +19,5 @@
 extern bool timeout;
 extern bool linkedReset;
 extern char * inputBuffer;
+
+VOID startTimer();

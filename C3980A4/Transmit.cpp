@@ -12,7 +12,7 @@ extern char control[2] = {0};
 extern char line[518] = { 0 };
 FILE * filePtr = NULL;
 
-void prepareToSend(FILE *outputBuffer)
+void prepareToSend(FILE *outputBuffer, HANDLE hComm)
 {
 	sentCtrl = false;
 	while (sentCtrl == false)
@@ -38,7 +38,7 @@ void prepareToSend(FILE *outputBuffer)
 			addData();
 			addCRC();
 		}
-		send();
+		send(hComm);
 	}
 }
 
@@ -46,7 +46,7 @@ void addData()
 {
 	size_t n = 0;
 	int c;
-	int count = 0;
+	int count = 2;
 	bool eof = false;
 	while (count != 512)
 	{
@@ -64,20 +64,24 @@ void addData()
 	}
 }
 
-void send()
+void send(HANDLE hComm)
 {
+	LPDWORD sentBytes = 0;
 	int retransmitCount = 0;
 	while (retransmitCount < 3)
 	{
-		//startTimer();
+		startTimer();
 		if (eot == true)
 		{
 			sent = 0;
+			bool bwrite = WriteFile(hComm, (LPCVOID)control, (DWORD)strlen(control), sentBytes, NULL);
+			return;
 			//send control frame
 		}
 		else
 		{
 			//send line frame
+			bool bwrite = WriteFile(hComm, (LPCVOID)line, (DWORD)strlen(line), sentBytes, NULL);
 			while (timeout == false)
 			{
 				if (inputBuffer != NULL)

@@ -1,8 +1,6 @@
 /*
 PROGRAM HEADER HERE
 */
-#define STRICT
-#include <Windows.h>
 #include "Header.h"
 #include "Main.h"
 #include "Receive.h"
@@ -23,6 +21,7 @@ extern bool timeout = false;
 extern bool linkedReset = false;
 FILE * outputBuffer = NULL;
 extern char * inputBuffer = NULL;
+HANDLE hComm;
 
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
@@ -117,7 +116,7 @@ void bidForLine()
 			if (inputBuffer[1] == 6)
 			{
 				timeout = true;
-				prepareToSend(outputBuffer);
+				prepareToSend(outputBuffer, hComm);
 			}
 		}
 	}
