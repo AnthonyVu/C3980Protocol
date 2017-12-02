@@ -115,12 +115,14 @@
     <ClInclude Include="Main.h" />
     <ClInclude Include="Print.h" />
     <ClInclude Include="Receive.h" />
+    <ClInclude Include="testFunctions.h" />
     <ClInclude Include="Transmit.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Print.cpp" />
     <ClCompile Include="Receive.cpp" />
+    <ClCompile Include="testFunctions.cpp" />
     <ClCompile Include="Transmit.cpp" />
   </ItemGroup>
   <ItemGroup>
