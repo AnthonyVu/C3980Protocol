@@ -3,6 +3,7 @@ PROGRAM HEADER HERE
 */
 #define STRICT
 #include <Windows.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "Header.h"
 #include "Main.h"
@@ -10,13 +11,19 @@ PROGRAM HEADER HERE
 #include "Transmit.h"
 #include "Print.h"
 
+
 char programName[] = "C3980 A4";
 char filePathBuffer[128];
 LPCSTR lpszCommName = "COM1";
 
+HANDLE port;
+HANDLE timerThread;
+
 HANDLE fileHandle;
 HANDLE idleThread;
+
 HWND hwnd;
+boolean connectMode = false;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
@@ -32,8 +39,15 @@ FILE * outputBuffer = NULL;
 extern char * inputBuffer = NULL;
 HANDLE hComm;
 
+
+bool timeout;
+char* inputBuffer;
+
+
+
 //Initialize OPENFILENAME
 OPENFILENAME ofn;
+
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
 {
@@ -41,7 +55,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	WNDCLASSEX Wcl;
 	PAINTSTRUCT paintstruct;
 	HDC hdc = BeginPaint(hwnd, &paintstruct);
-
+	
+	FILE * s;
 	Wcl.cbSize = sizeof(WNDCLASSEX);
 	Wcl.style = CS_HREDRAW | CS_VREDRAW;
 	Wcl.hIcon = LoadIcon(NULL, IDI_APPLICATION);
@@ -118,10 +133,56 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		switch (LOWORD(wParam))
 		{
 		case (MENU_CONNECT):
+			connectMode = true;
+			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0,
+				NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
+				== INVALID_HANDLE_VALUE)
+			{
+				MessageBox(NULL, "Error opening COM port:", "", MB_OK);
+				return FALSE;
+			}
+			
+			/*
+			
+			
+			DCB deviceContext;
+			COMMTIMEOUTS ct = { 0 };
+			char settings[] = "9600,8,N,1";
 
+			ct.ReadIntervalTimeout = MAXDWORD;
+			SetCommTimeouts(port, &ct);
+
+			//setup device context settings
+			if (!SetupComm(port, 8, 8)) {
+				MessageBox(hwnd, "setupComm failed", "", NULL);
+				break;
+			}
+
+			if (!GetCommState(port, &deviceContext)) {
+				MessageBox(hwnd, "getCommState failed", "", NULL);
+				break;
+			}
+
+			if (!BuildCommDCB(settings, &deviceContext)) {
+				MessageBox(hwnd, "buildCommDCB failed", "", NULL);
+				break;
+			}
+
+			if (!SetCommState(port, &deviceContext)) {
+				MessageBox(hwnd, "setCommState failed", "", NULL);
+				break;
+			}
+			*/
+
+			/*
+			char a[518];
+			memset(a, 'a', 518);
+			inputBuffer = a;
+			print();
+			*/
 			break;
 		case (MENU_DISCONNECT):
-
+			connectMode = false;
 			break;
 		case (MENU_QUIT):
 
