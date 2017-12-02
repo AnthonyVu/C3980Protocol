@@ -154,23 +154,26 @@ VOID Idle()
 		startTimer();
 		while (!timeout)
 		{
-			if (inputBuffer != NULL)
-				if (inputBuffer[1] == 5)
-					Acknowledge();
+			MessageBox(hwnd, "idle", "", MB_OK);
+			if (inputBuffer != NULL && inputBuffer[1] == 5)
+			{
+				Acknowledge();
+			}
 			if (timeout)
+			{
 				linkedReset = false;
+			}
 		}
 	}
 	else
 	{
 		while (true)
 		{
-			if (inputBuffer != NULL)
+			if (inputBuffer != NULL && strlen(inputBuffer) > 0)
 			{
-				if (strlen(inputBuffer) > 0)
+				if (inputBuffer[1] == 5)
 				{
-					if (inputBuffer[1] == 5)
-						Acknowledge();
+					Acknowledge();
 				}
 			}
 			/*
@@ -200,6 +203,7 @@ void bidForLine()
 	startTimer();
 	while (timeout != true)
 	{
+		MessageBox(hwnd, "bid", "", MB_OK);
 		if (inputBuffer != NULL)
 		{
 			if (inputBuffer[1] == 6)
