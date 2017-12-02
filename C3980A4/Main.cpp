@@ -215,14 +215,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					MessageBox(hwnd, "I could not open the file master.", "", NULL);
 				}
 
-				if (FALSE == ReadFileEx(fileHandle, inputFileBuffer, sizeof(inputFileBuffer) - 1, &ol, FileIOCompletionRoutine))
+				if (ReadFileEx(fileHandle, inputFileBuffer, sizeof(inputFileBuffer) - 1, &ol, FileIOCompletionRoutine))
 				{
 					//DisplayError(TEXT("ReadFile"));
-					MessageBox(hwnd, "File Read Error, master.", "", NULL);
+					//MessageBox(hwnd, inputFileBuffer, "", NULL);
+					//printf("%s", inputFileBuffer);
 				}
 				//if (dwBytesRead > 0 && dwBytesRead <= sizeof(inputFileBuffer) - 1)
 				//{
-					sprintf_s(inputFileBuffer, "%s", fileHandle);
+					//sprintf_s(inputFileBuffer, "%s", fileHandle);
 				//}
 
 			}
