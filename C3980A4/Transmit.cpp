@@ -66,7 +66,7 @@ void addData()
 
 void send(HANDLE hComm)
 {
-	LPDWORD sentBytes = 0;
+	DWORD dwBytesWritten;
 	int retransmitCount = 0;
 	while (retransmitCount < 3)
 	{
@@ -74,14 +74,14 @@ void send(HANDLE hComm)
 		if (eot == true)
 		{
 			sent = 0;
-			bool bwrite = WriteFile(hComm, (LPCVOID)control, (DWORD)strlen(control), sentBytes, NULL);
+			bool bwrite = WriteFile(hComm, (LPCVOID)control, (DWORD)strlen(control), &dwBytesWritten, NULL);
 			return;
 			//send control frame
 		}
 		else
 		{
 			//send line frame
-			bool bwrite = WriteFile(hComm, (LPCVOID)line, (DWORD)strlen(line), sentBytes, NULL);
+			bool bwrite = WriteFile(hComm, (LPCVOID)line, (DWORD)strlen(line), &dwBytesWritten, NULL);
 			while (timeout == false)
 			{
 				if (inputBuffer != NULL)

@@ -176,7 +176,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			
 
 
-			Receive();
+			//Receive();
 
 
 			/*
@@ -273,7 +273,7 @@ void sendEnq()
 	DWORD dwBytesWritten;
 	char enq[1];
 	enq[0] = 5;
-	bool bwrite = WriteFile(hComm, (LPCVOID)enq, (DWORD)strlen(enq), &dwBytesWritten, NULL);
+	bool bwrite = WriteFile(port, (LPCVOID)enq, (DWORD)strlen(enq), &dwBytesWritten, NULL);
 }
 
 void bidForLine()
@@ -287,7 +287,7 @@ void bidForLine()
 			if (inputBuffer[1] == 6)
 			{
 				timeout = true;
-				//prepareToSend(outputBuffer, hComm);
+				//prepareToSend(outputBuffer, port);
 			}
 		}
 	}
