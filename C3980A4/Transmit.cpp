@@ -8,7 +8,7 @@
 extern bool sentCtrl = false;
 extern int sent = 0;
 extern bool eot = false;
-extern char control[2] = {0};
+extern char control[2] = { 0 };
 extern char line[518] = { 0 };
 FILE * filePtr = NULL;
 
