@@ -3,6 +3,7 @@ PROGRAM HEADER HERE
 */
 #define STRICT
 #include <Windows.h>
+#include <stdlib.h>
 #include "Header.h"
 #include "Main.h"
 #include "Receive.h"
@@ -10,21 +11,28 @@ PROGRAM HEADER HERE
 #include "Print.h"
 
 char programName[] = "C3980 A4";
+char filePathBuffer[128];
 LPCSTR lpszCommName = "COM1";
 
-HANDLE timerThread;
+HANDLE fileHandle;
+HANDLE idleThread;
 HWND hwnd;
-bool linkReset = true;
-bool timeout;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
 VOID startTimer();
-DWORD32 crc32c(DWORD32, const char *, size_t);
-BOOLEAN Validation(DWORD32, const char *, size_t);
 VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
 VOID Idle();
 VOID Acknowledge();
+void bidForLine();
+
+extern bool timeout = false;
+extern bool linkedReset = false;
+FILE * outputBuffer = NULL;
+extern char * inputBuffer = NULL;
+
+//Initialize OPENFILENAME
+OPENFILENAME ofn;
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
 {
@@ -48,9 +56,21 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	Wcl.cbClsExtra = 0;
 	Wcl.cbWndExtra = 0;
 
-	Idle();
 	if (!RegisterClassEx(&Wcl))
 		return 0;
+
+	//sets memory of OPENFILEDIALOG
+	memset(&ofn, 0, sizeof(ofn)); ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = hwnd;
+	ofn.lpstrFile = filePathBuffer;
+	ofn.lpstrFile[0] = '\0';
+	ofn.nMaxFile = sizeof(filePathBuffer);
+	ofn.lpstrFilter = "All\0*.*\Text\0*.TXT\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
 	hwnd = CreateWindow(programName, programName, WS_OVERLAPPEDWINDOW, 10, 10, windowWidth, windowHeight, NULL, NULL, hInst, NULL);
 	ShowWindow(hwnd, nCmdShow);
@@ -66,6 +86,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 }
 
 
+
 VOID startTimer()
 {
 	timeout = false;
@@ -74,6 +95,8 @@ VOID startTimer()
 
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 	timeout = true;
+	//MessageBox(hwnd, "test", "", MB_OK);
+	//KillTimer(hwnd, TIMER_TEST);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -84,6 +107,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 	switch (Message)
 	{
+	case WM_CREATE:
+		if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
+			/* handle error */
+			return 0;
+		} /* end if (error creating read thread) */
+		break;
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
@@ -96,6 +125,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		case (MENU_QUIT):
 
 			PostQuitMessage(0);
+			break;
+		case (MENU_FILE):
+			if (GetOpenFileName(&ofn) == TRUE)
+			{
+				fileHandle = CreateFile(ofn.lpstrFile, GENERIC_READ, 0, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE)NULL);
+			}
 			break;
 		}
 		break;
@@ -112,38 +147,68 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-DWORD32 crc32c(DWORD32 crc, const char *buf, size_t len)
-{
-	int k;
-
-	crc = ~crc;
-	while (len--) {
-		crc ^= *buf++;
-		for (k = 0; k < 8; k++)
-			crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-	}
-	return ~crc;
-}
-
-BOOLEAN Validation(DWORD32 originalCrc, const char *inputBuf, size_t inputBufLen)
-{
-	DWORD32 crc = crc32c(0, inputBuf, inputBufLen);
-	return crc == originalCrc;
-}
-
 VOID Idle()
 {
-	if (linkReset)
+	if (linkedReset)
 	{
 		startTimer();
-		while (timeout != true)
+		while (!timeout)
 		{
-			
+			if (inputBuffer != NULL)
+				if (inputBuffer[1] == 5)
+					Acknowledge();
+			if (timeout)
+				linkedReset = false;
+		}
+	}
+	else
+	{
+		while (true)
+		{
+			if (inputBuffer != NULL)
+			{
+				if (strlen(inputBuffer) > 0)
+				{
+					if (inputBuffer[1] == 5)
+						Acknowledge();
+				}
+			}
+			/*
+			if (strlen(outputBuffer) > 0)
+			{
+			control[0] = 22;
+			control[1] = 5;
+			//send control frame
+			bidForLine();
+			}
+			*/
 		}
 	}
 }
 
 VOID Acknowledge()
 {
+	control[0] = 22;
+	control[1] = 6;
+	//put control frame in output buffer
+	send();
+	//Receive();
+}
 
+void bidForLine()
+{
+	startTimer();
+	while (timeout != true)
+	{
+		if (inputBuffer != NULL)
+		{
+			if (inputBuffer[1] == 6)
+			{
+				timeout = true;
+				prepareToSend(outputBuffer);
+			}
+		}
+	}
+	linkedReset = true;
+	return;
 }
