@@ -121,6 +121,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT paintstruct;
 	DWORD threadId;
 
+	DCB deviceContext;
+	COMMTIMEOUTS ct = { 0 };
+	char settings[] = "9600,8,N,1";
+
 	switch (Message)
 	{
 	case WM_CREATE:
@@ -137,21 +141,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			
 			
 			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0, 
+
 				NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
 				== INVALID_HANDLE_VALUE)
 			{
 				MessageBox(NULL, "Error opening COM port:", "", MB_OK);
 				return FALSE;
 			}
-			 
-
-			Receive();
-			/*
-			
-			
-			DCB deviceContext;
-			COMMTIMEOUTS ct = { 0 };
-			char settings[] = "9600,8,N,1";
 
 			ct.ReadIntervalTimeout = MAXDWORD;
 			SetCommTimeouts(port, &ct);
@@ -166,17 +162,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				MessageBox(hwnd, "getCommState failed", "", NULL);
 				break;
 			}
-
+/*
 			if (!BuildCommDCB(settings, &deviceContext)) {
 				MessageBox(hwnd, "buildCommDCB failed", "", NULL);
 				break;
-			}
+			}*/
 
 			if (!SetCommState(port, &deviceContext)) {
 				MessageBox(hwnd, "setCommState failed", "", NULL);
 				break;
 			}
-			*/
+			
+
+
+			Receive();
+
 
 			/*
 			char a[518];

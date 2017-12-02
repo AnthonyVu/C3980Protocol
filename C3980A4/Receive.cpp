@@ -1,12 +1,14 @@
 #include "Receive.h"
 #include "Header.h"
 #include "Print.h"
-
+#include "Main.h"
 
 void Receive() {
 	DWORD bitsWritten;
 	char buffer[518];
+	memset(buffer, ' ', 518);
 	timeout = false;
+	startTimer();
 	//start timer thread
 	while (!timeout) {
 
