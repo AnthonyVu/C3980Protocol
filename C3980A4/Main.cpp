@@ -35,12 +35,6 @@ HANDLE hComm;
 //Initialize OPENFILENAME
 OPENFILENAME ofn;
 
-
-
-
-//Initialize OPENFILENAME
-OPENFILENAME ofn;
-
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
 {
 	MSG Msg;
