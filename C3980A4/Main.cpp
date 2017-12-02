@@ -30,6 +30,13 @@ extern bool timeout = false;
 extern bool linkedReset = false;
 FILE * outputBuffer = NULL;
 extern char * inputBuffer = NULL;
+HANDLE hComm;
+
+//Initialize OPENFILENAME
+OPENFILENAME ofn;
+
+
+
 
 //Initialize OPENFILENAME
 OPENFILENAME ofn;
@@ -194,7 +201,7 @@ VOID Acknowledge()
 	control[0] = 22;
 	control[1] = 6;
 	//put control frame in output buffer
-	send();
+	send(hComm);
 	//Receive();
 }
 
@@ -209,7 +216,7 @@ void bidForLine()
 			if (inputBuffer[1] == 6)
 			{
 				timeout = true;
-				prepareToSend(outputBuffer);
+				prepareToSend(outputBuffer, hComm);
 			}
 		}
 	}
