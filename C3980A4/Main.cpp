@@ -1,6 +1,9 @@
 /*
 PROGRAM HEADER HERE
 */
+#define STRICT
+#include <Windows.h>
+#include <stdlib.h>
 #include "Header.h"
 #include "Main.h"
 #include "Receive.h"
@@ -8,9 +11,11 @@ PROGRAM HEADER HERE
 #include "Print.h"
 
 char programName[] = "C3980 A4";
+char filePathBuffer[128];
 LPCSTR lpszCommName = "COM1";
 
 HANDLE timerThread;
+HANDLE fileHandle;
 HWND hwnd;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -22,6 +27,12 @@ extern bool linkedReset = false;
 FILE * outputBuffer = NULL;
 extern char * inputBuffer = NULL;
 HANDLE hComm;
+
+//Initialize OPENFILENAME
+OPENFILENAME ofn;
+
+
+
 
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
@@ -49,6 +60,18 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	if (!RegisterClassEx(&Wcl))
 		return 0;
 
+	//sets memory of OPENFILEDIALOG
+	memset(&ofn, 0, sizeof(ofn)); ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = hwnd;
+	ofn.lpstrFile = filePathBuffer;
+	ofn.lpstrFile[0] = '\0';
+	ofn.nMaxFile = sizeof(filePathBuffer);
+	ofn.lpstrFilter = "All\0*.*\Text\0*.TXT\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
 	hwnd = CreateWindow(programName, programName, WS_OVERLAPPEDWINDOW, 10, 10, windowWidth, windowHeight, NULL, NULL, hInst, NULL);
 	ShowWindow(hwnd, nCmdShow);
@@ -90,6 +113,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		case (MENU_QUIT):
 			
 			PostQuitMessage(0);
+			break;
+		case (MENU_FILE):
+			if (GetOpenFileName(&ofn) == TRUE)
+			{
+				fileHandle = CreateFile(ofn.lpstrFile, GENERIC_READ, 0, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE)NULL);
+			}
 			break;
 		}
 		break;
