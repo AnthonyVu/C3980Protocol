@@ -203,6 +203,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &paintstruct);
 		break;
+	case WM_CHAR:
+		sendEnq();
+		break;
 	case WM_DESTROY:
 
 		PostQuitMessage(0);
@@ -262,6 +265,14 @@ VOID Acknowledge()
 	//put control frame in output buffer
 	send(hComm);
 	//Receive();
+}
+
+void sendEnq()
+{
+	DWORD dwBytesWritten;
+	char * enq;
+	enq[0] = 5;
+	bool bwrite = WriteFile(hComm, (LPCVOID)enq, (DWORD)strlen(enq), &dwBytesWritten, NULL);
 }
 
 void bidForLine()
