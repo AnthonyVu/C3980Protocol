@@ -6,15 +6,20 @@
 void Receive() {
 	DWORD bitsWritten;
 	char buffer[518];
-
+	timeout = false;
 	//start timer thread
 	while (!timeout) {
 
 		if (ReadFile(port, buffer, sizeof(buffer), &bitsWritten, NULL)) {
 			if (bitsWritten) {
+				inputBuffer = buffer;
+				print();
+				/*
 				if (buffer[1] == 4) {
 					return;
 				}
+				*/
+
 				/*
 				else if (outputBuffer == RVI) { //?undetermined
 					char rvi[2];
@@ -26,6 +31,9 @@ void Receive() {
 					return;
 				}
 				*/
+
+
+				/*
 				else if (buffer[1] == 2) {
 					//call validation on inpuBuffer
 					//if (validate(inputBuffer)) {
@@ -43,6 +51,8 @@ void Receive() {
 					timeout = false;
 					//reset timeout thread;
 				}
+
+				*/
 			}
 		}
 	}

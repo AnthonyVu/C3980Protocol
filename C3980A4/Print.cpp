@@ -7,7 +7,7 @@
 
 void print() {
 	HDC dc = GetDC(hwnd);
-
+	   
 	TEXTMETRIC tm;
 	RECT rect;
 	int windowWidth;

@@ -35,13 +35,13 @@ void bidForLine();
 
 extern bool timeout = false;
 extern bool linkedReset = false;
-FILE * outputBuffer = NULL;
+//FILE * outputBuffer = NULL;
 extern char * inputBuffer = NULL;
 HANDLE hComm;
 
 
-bool timeout;
-char* inputBuffer;
+//bool timeout;
+//char* inputBuffer;
 
 
 
@@ -134,14 +134,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 		case (MENU_CONNECT):
 			connectMode = true;
-			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0,
+			
+			
+			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0, 
 				NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
 				== INVALID_HANDLE_VALUE)
 			{
 				MessageBox(NULL, "Error opening COM port:", "", MB_OK);
 				return FALSE;
 			}
-			
+			 
+
+			Receive();
 			/*
 			
 			
@@ -271,7 +275,7 @@ void bidForLine()
 			if (inputBuffer[1] == 6)
 			{
 				timeout = true;
-				prepareToSend(outputBuffer, hComm);
+				//prepareToSend(outputBuffer, hComm);
 			}
 		}
 	}
