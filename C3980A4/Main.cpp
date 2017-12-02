@@ -19,12 +19,19 @@ LPCSTR lpszCommName = "COM1";
 HANDLE port;
 HANDLE timerThread;
 
+//OpenFile Global Variables
 HANDLE fileHandle;
+OPENFILENAME ofn;
+char inputFileBuffer[2048];
+OVERLAPPED ol;
+DWORD g_BytesTransferred;
+
 HANDLE idleThread;
 
 HWND hwnd;
 boolean connectMode = false;
 
+//Function Headers
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
 VOID startTimer();
@@ -46,7 +53,7 @@ HANDLE hComm;
 
 
 //Initialize OPENFILENAME
-OPENFILENAME ofn;
+
 
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
@@ -87,6 +94,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = NULL;
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+	ol = { 0 };
 
 	hwnd = CreateWindow(programName, programName, WS_OVERLAPPEDWINDOW, 10, 10, windowWidth, windowHeight, NULL, NULL, hInst, NULL);
 	ShowWindow(hwnd, nCmdShow);
@@ -115,6 +123,13 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 	//KillTimer(hwnd, TIMER_TEST);
 }
 
+VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped)
+{
+	printf(TEXT("Error code:\t%x\n"), dwErrorCode);
+	printf(TEXT("Number of bytes: \t%x\n"), dwNumberOfBytesTransferred);
+	g_BytesTransferred = dwNumberOfBytesTransferred;
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;
@@ -124,6 +139,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	DCB deviceContext;
 	COMMTIMEOUTS ct = { 0 };
 	char settings[] = "9600,8,N,1";
+
+	//File Input variables
+	DWORD dwBytesRead = 0;
 
 	switch (Message)
 	{
@@ -138,7 +156,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 		case (MENU_CONNECT):
 			connectMode = true;
-			
 			
 			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0, 
 
@@ -162,7 +179,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				MessageBox(hwnd, "getCommState failed", "", NULL);
 				break;
 			}
-/*
+			/*
 			if (!BuildCommDCB(settings, &deviceContext)) {
 				MessageBox(hwnd, "buildCommDCB failed", "", NULL);
 				break;
@@ -172,11 +189,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				MessageBox(hwnd, "setCommState failed", "", NULL);
 				break;
 			}
-			
-
-
+		
 			Receive();
-
 
 			/*
 			char a[518];
@@ -189,13 +203,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			connectMode = false;
 			break;
 		case (MENU_QUIT):
-
 			PostQuitMessage(0);
 			break;
 		case (MENU_FILE):
 			if (GetOpenFileName(&ofn) == TRUE)
 			{
 				fileHandle = CreateFile(ofn.lpstrFile, GENERIC_READ, 0, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE)NULL);
+
+				if (fileHandle == INVALID_HANDLE_VALUE) {
+					MessageBox(hwnd, "I could not open the file master.", "", NULL);
+				}
+
+				if (FALSE == ReadFileEx(fileHandle, inputFileBuffer, sizeof(inputFileBuffer) - 1, &ol, FileIOCompletionRoutine))
+				{
+					//DisplayError(TEXT("ReadFile"));
+					MessageBox(hwnd, "File Read Error, master.", "", NULL);
+				}
+				//if (dwBytesRead > 0 && dwBytesRead <= sizeof(inputFileBuffer) - 1)
+				//{
+					sprintf_s(inputFileBuffer, "%s", fileHandle);
+				//}
+
 			}
 			break;
 		}
