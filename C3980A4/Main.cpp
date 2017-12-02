@@ -32,6 +32,7 @@ VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
 VOID Idle();
 VOID Acknowledge();
 void bidForLine();
+void sendEnq();
 
 extern bool timeout = false;
 extern bool linkedReset = false;
@@ -270,7 +271,7 @@ VOID Acknowledge()
 void sendEnq()
 {
 	DWORD dwBytesWritten;
-	char * enq;
+	char enq[1];
 	enq[0] = 5;
 	bool bwrite = WriteFile(hComm, (LPCVOID)enq, (DWORD)strlen(enq), &dwBytesWritten, NULL);
 }
