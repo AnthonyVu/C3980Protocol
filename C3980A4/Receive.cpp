@@ -5,8 +5,8 @@
 
 void Receive() {
 	DWORD bitsWritten;
-	char recieveBuffer[518];
-	memset(recieveBuffer, 0, 518);
+	//char recieveBuffer[518];
+	//memset(recieveBuffer, 0, 518);
 	startTimer();
 	//start timer thread
 	int messagesRecieved = 0;
@@ -18,7 +18,7 @@ void Receive() {
 				return;
 			} else if (inputBuffer[1] == 'R') { //?undetermined
 				char rvi[2];
-				rvi[0] = (char)22;
+				rvi[0] = 22;
 				//rvi[1] = (char) ? ;
 				WriteFile(port, rvi, sizeof(rvi), &bitsWritten, NULL);
 				return;
@@ -31,9 +31,9 @@ void Receive() {
 					ack[0] = (char)22;
 					ack[1] = (char)6;
 					WriteFile(port, ack, sizeof(ack), &bitsWritten, NULL);
-					inputBuffer = recieveBuffer;
+					
 					print();
-					inputBuffer = NULL;
+					memset(inputBuffer, 0, 518);
 					messagesRecieved++;
 				//}
 				startTimer();

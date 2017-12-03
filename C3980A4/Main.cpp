@@ -49,8 +49,8 @@ DWORD readThread(LPDWORD);
 extern bool timeout = false;
 extern bool linkedReset = false;
 //FILE * outputBuffer = NULL;
-extern char * inputBuffer = NULL;
-HANDLE hComm;
+char inputBuffer[518];
+
 
 
 //bool timeout;
@@ -159,16 +159,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			//Connect menu button pressed, should probably connect before setting connectMode=true
 		case (MENU_CONNECT):
 
-			if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
-				/* handle error */
-				return 0;
-			} /* end if (error creating read thread) */
-			if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, CREATE_SUSPENDED, 0)) == INVALID_HANDLE_VALUE) {
-
-			}
-        
-			connectMode = true;
-
 
 			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0,
 				NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
@@ -178,6 +168,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				return FALSE;
 			}
 
+			connectMode = true;
+			
+        
+			
+
+
+			
 			connectMode = true;
 
 			ct.ReadIntervalTimeout = MAXDWORD;
@@ -203,10 +200,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				MessageBox(hwnd, "setCommState failed", "", NULL);
 				break;
 			}
+			
+			if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
+				/* handle error */
+				return 0;
+			} /* end if (error creating read thread) */
+			if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
 
+			}
+			/*
 			if (ResumeThread(readInputBufferThread) == -1) {
 				MessageBox(hwnd, "could not resume readInputBufferThread, my lord", "", NULL);
 			}
+			*/
+			
 
 			break;
 			//Disconnect menu button pressed
@@ -280,6 +287,7 @@ VOID Idle()
 		}
 		if (inputBuffer != NULL && strlen(inputBuffer) > 0)
 		{
+	
 			if (inputBuffer[1] == 5)
 			{
 				Acknowledge();
@@ -339,28 +347,43 @@ DWORD readThread(LPDWORD lpdwParam1)
 	DWORD nBytesRead = 0;
 	DWORD dwEvent, dwError;
 	COMSTAT cs;
+	char a[10];
 
-	SetCommMask(hComm, EV_RXCHAR);
+	SetCommMask(port, EV_RXCHAR);
 
 	//temp bool used for read loop
 	while (connectMode) {
-		if (WaitCommEvent(hComm, &dwEvent, NULL))
+		if (ReadFile(port, inputBuffer, sizeof(inputBuffer), &nBytesRead, NULL)) //need receive buffer to be extern to access
+		{
+			if (nBytesRead > 0) {
+				int i = 0;
+			}
+
+			//error case, handle error here
+
+		}
+		/*
+		if (WaitCommEvent(port, &dwEvent, NULL))
 		{
 			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
 			ClearCommError(port, &dwError, &cs);
 			if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
 			{
-				if (!ReadFile(port, inputBuffer, cs.cbInQue, &nBytesRead, NULL)) //need receive buffer to be extern to access
+				if (!ReadFile(port, inputBuffer, sizeof(inputBuffer), &nBytesRead, NULL)) //need receive buffer to be extern to access
 				{
 					//error case, handle error here
+					int i = 0;
 				}
 				else
 				{
 					//handle success
+					
+					int u = 0;
 				}
 			}
 		}
+		*/
 	}
-	PurgeComm(hComm, PURGE_RXCLEAR);
+	PurgeComm(port, PURGE_RXCLEAR);
 	return nBytesRead;
 }

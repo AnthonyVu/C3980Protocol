@@ -19,6 +19,6 @@
 
 extern bool timeout;
 extern bool linkedReset;
-extern char * inputBuffer;
+extern char inputBuffer[];
 
 VOID startTimer();
