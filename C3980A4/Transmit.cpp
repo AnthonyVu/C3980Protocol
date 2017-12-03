@@ -12,7 +12,7 @@ extern char control[2] = { 0 };
 extern char line[518] = { 0 };
 char * filePtr = NULL;
 
-void prepareToSend(char *outputBuffer, HANDLE hComm)
+void prepareToSend(char *outputBuffer, HANDLE port)
 {
 	sentCtrl = false;
 	while (sentCtrl == false)
@@ -38,7 +38,7 @@ void prepareToSend(char *outputBuffer, HANDLE hComm)
 			addData();
 			addCRC();
 		}
-		send(hComm);
+		send(port);
 	}
 }
 
@@ -50,9 +50,10 @@ void addData()
 	bool eof = false;
 	while (count != 512)
 	{
-		if (eof == false && (c = fgetc(filePtr)) != EOF)
+		if (eof == false && *filePtr != EOF)
 		{
-			line[count] = (char)c;
+			line[count] = *filePtr;
+			filePtr++;
 		}
 		else
 		{
@@ -64,7 +65,7 @@ void addData()
 	}
 }
 
-void send(HANDLE hComm)
+void send(HANDLE port)
 {
 	DWORD dwBytesWritten;
 	int retransmitCount = 0;
@@ -74,14 +75,14 @@ void send(HANDLE hComm)
 		if (eot == true)
 		{
 			sent = 0;
-			bool bwrite = WriteFile(hComm, (LPCVOID)control, (DWORD)strlen(control), &dwBytesWritten, NULL);
+			bool bwrite = WriteFile(port, (LPCVOID)control, (DWORD)strlen(control), &dwBytesWritten, NULL);
 			return;
 			//send control frame
 		}
 		else
 		{
 			//send line frame
-			bool bwrite = WriteFile(hComm, (LPCVOID)line, (DWORD)strlen(line), &dwBytesWritten, NULL);
+			bool bwrite = WriteFile(port, (LPCVOID)line, (DWORD)strlen(line), &dwBytesWritten, NULL);
 			while (timeout == false)
 			{
 				if (inputBuffer != NULL)
@@ -91,7 +92,7 @@ void send(HANDLE hComm)
 						sent++;
 						return;
 					}
-					if (inputBuffer[1] == 0)
+					if (inputBuffer[1] == 21)
 					{
 						return;
 					}

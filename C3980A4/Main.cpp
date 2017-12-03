@@ -66,7 +66,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	WNDCLASSEX Wcl;
 	PAINTSTRUCT paintstruct;
 	HDC hdc = BeginPaint(hwnd, &paintstruct);
-	
+
 	FILE * s;
 	Wcl.cbSize = sizeof(WNDCLASSEX);
 	Wcl.style = CS_HREDRAW | CS_VREDRAW;
@@ -150,24 +150,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 	switch (Message)
 	{
-	case WM_CREATE:
-		if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
-			/* handle error */
-			return 0;
-		} /* end if (error creating read thread) */
-		if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, CREATE_SUSPENDED, 0)) == INVALID_HANDLE_VALUE) {
-
-		}
-		break;
-	//Switch case to handle menu buttons
+		//Switch case to handle menu buttons
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		//Connect menu button pressed, should probably connect before setting connectMode=true
+			//Connect menu button pressed, should probably connect before setting connectMode=true
 		case (MENU_CONNECT):
+			if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
+				/* handle error */
+				return 0;
+			} /* end if (error creating read thread) */
+			if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, CREATE_SUSPENDED, 0)) == INVALID_HANDLE_VALUE) {
+
+			}
 			connectMode = true;
-			
-			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0, 
+
+			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0,
 				NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
 				== INVALID_HANDLE_VALUE)
 			{
@@ -203,8 +201,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			if (ResumeThread(readInputBufferThread) == -1) {
 				MessageBox(hwnd, "could not resume readInputBufferThread, my lord", "", NULL);
 			}
-		
-			Receive();
+
+			//Receive();
 
 			/*
 			char a[518];
@@ -213,15 +211,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			print();
 			*/
 			break;
-		//Disconnect menu button pressed
+			//Disconnect menu button pressed
 		case (MENU_DISCONNECT):
 			connectMode = false;
 			break;
-		//Quit menu button pressed
+			//Quit menu button pressed
 		case (MENU_QUIT):
 			PostQuitMessage(0);
 			break;
-		//File menu button pressed
+			//File menu button pressed
 		case (MENU_FILE):
 			if (GetOpenFileName(&ofn) == TRUE)
 			{
@@ -264,53 +262,50 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 VOID Idle()
 {
-	if (linkedReset)
+	while (true)
 	{
-		startTimer();
-		while (!timeout)
+		if (linkedReset)
 		{
-			MessageBox(hwnd, "idle", "", MB_OK);
-			if (inputBuffer != NULL && inputBuffer[1] == 5)
+			startTimer();
+			while (!timeout)
 			{
-				Acknowledge();
-			}
-			if (timeout)
-			{
-				linkedReset = false;
-			}
-		}
-	}
-	else
-	{
-		while (true)
-		{
-			if (inputBuffer != NULL && strlen(inputBuffer) > 0)
-			{
-				if (inputBuffer[1] == 5)
+				MessageBox(hwnd, "idle", "", MB_OK);
+				if (inputBuffer != NULL && inputBuffer[1] == 5)
 				{
 					Acknowledge();
 				}
+				if (timeout)
+				{
+					linkedReset = false;
+				}
 			}
-			/*
-			if (strlen(outputBuffer) > 0)
+		}
+		if (inputBuffer != NULL && strlen(inputBuffer) > 0)
+		{
+			if (inputBuffer[1] == 5)
 			{
+				Acknowledge();
+				break;
+			}
+		}
+		else if (strlen(inputFileBuffer) > 0)
+		{
+			DWORD bytesWritten;
 			control[0] = 22;
 			control[1] = 5;
-			//send control frame
+			WriteFile(port, control, sizeof(control), &bytesWritten, NULL);
 			bidForLine();
-			}
-			*/
 		}
 	}
 }
 
 VOID Acknowledge()
 {
+	DWORD bytesWritten;
 	control[0] = 22;
 	control[1] = 6;
-	//put control frame in output buffer
-	send(port);
-	//Receive();
+	WriteFile(port, control, sizeof(control), &bytesWritten, NULL);
+	Receive();
 }
 
 VOID sendEnq()
@@ -354,18 +349,18 @@ DWORD readThread(LPDWORD lpdwParam1)
 		if (WaitCommEvent(hComm, &dwEvent, NULL))
 		{
 			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
-			//ClearCommError(hComm, &dwError, &cs);
-			//if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
-			//{
-			//	if (!ReadFile(hComm, buffer, cs.cbInQue, &nBytesRead, NULL)) //need receive buffer to be extern to access
-			//	{
-			//		//error case, handle error here
-			//	}
-			//	else
-			//	{
-			//		//handle success
-			//	}
-			//}
+			ClearCommError(port, &dwError, &cs);
+			if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
+			{
+				if (!ReadFile(port, inputBuffer, cs.cbInQue, &nBytesRead, NULL)) //need receive buffer to be extern to access
+				{
+					//error case, handle error here
+				}
+				else
+				{
+					//handle success
+				}
+			}
 		}
 	}
 	PurgeComm(hComm, PURGE_RXCLEAR);
