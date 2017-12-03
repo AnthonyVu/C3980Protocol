@@ -22,6 +22,7 @@ void Receive() {
 				//rvi[1] = (char) ? ;
 				WriteFile(port, rvi, sizeof(rvi), &bitsWritten, NULL);
 				return;
+
 			}
 			else if (inputBuffer[1] == 2) {
 				//call validation on inpuBuffer
