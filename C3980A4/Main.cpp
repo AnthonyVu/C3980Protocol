@@ -27,6 +27,7 @@ OVERLAPPED ol;
 DWORD g_BytesTransferred;
 
 HANDLE idleThread;
+HANDLE readInputBufferThread;
 
 HWND hwnd;
 boolean connectMode = false;
@@ -40,6 +41,8 @@ VOID Idle();
 VOID Acknowledge();
 void bidForLine();
 void sendEnq();
+DWORD readThread(LPDWORD);
+
 
 extern bool timeout = false;
 extern bool linkedReset = false;
@@ -131,11 +134,12 @@ VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTr
 	g_BytesTransferred = dwNumberOfBytesTransferred;
 }
 
+//Can we move WndProc up to be right below WinMain -Wilson
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;
 	PAINTSTRUCT paintstruct;
-	DWORD threadId;
+	DWORD threadId; //unused?
 
 	DCB deviceContext;
 	COMMTIMEOUTS ct = { 0 };
@@ -152,14 +156,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			return 0;
 		} /* end if (error creating read thread) */
 		break;
+	//Switch case to handle menu buttons
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
+		//Connect menu button pressed, should probably connect before setting connectMode=true
 		case (MENU_CONNECT):
 			connectMode = true;
 			
 			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0, 
-
 				NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
 				== INVALID_HANDLE_VALUE)
 			{
@@ -200,12 +205,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			print();
 			*/
 			break;
+		//Disconnect menu button pressed
 		case (MENU_DISCONNECT):
 			connectMode = false;
 			break;
+		//Quit menu button pressed
 		case (MENU_QUIT):
 			PostQuitMessage(0);
 			break;
+		//File menu button pressed
 		case (MENU_FILE):
 			if (GetOpenFileName(&ofn) == TRUE)
 			{
@@ -297,7 +305,7 @@ VOID Acknowledge()
 	//Receive();
 }
 
-void sendEnq()
+VOID sendEnq()
 {
 	DWORD dwBytesWritten;
 	char enq[1];
@@ -305,7 +313,7 @@ void sendEnq()
 	bool bwrite = WriteFile(hComm, (LPCVOID)enq, (DWORD)strlen(enq), &dwBytesWritten, NULL);
 }
 
-void bidForLine()
+VOID bidForLine()
 {
 	startTimer();
 	while (timeout != true)
@@ -322,4 +330,35 @@ void bidForLine()
 	}
 	linkedReset = true;
 	return;
+}
+
+//https://www.codeguru.com/cpp/i-n/network/serialcommunications/article.php/c5425/Serial-Communication-in-Windows.htm wewwwww
+//thread function to read from input buffer
+DWORD readThread(LPDWORD lpdwParam1)
+{
+	DWORD nBytesRead, dwEvent, dwError;
+	COMSTAT cs;
+
+	SetCommMask(hComm, EV_RXCHAR);
+
+	//temp bool used for read loop
+	while (connectMode) {
+		if (WaitCommEvent(hComm, &dwEvent, NULL))
+		{
+			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
+			ClearCommError(hComm, &dwError, &cs);
+			if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
+			{
+				if (!ReadFile(hComm, buffer, cs.cbInQue, &nBytesRead, NULL)) //need receive buffer to be extern to access
+				{
+					//error case, handle error here
+				}
+				else
+				{
+					//handle success
+				}
+			}
+		}
+	}
+	PurgeComm(hComm, PURGE_RXCLEAR);
 }
