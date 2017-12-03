@@ -30,6 +30,8 @@ HANDLE idleThread;
 
 HWND hwnd;
 boolean connectMode = false;
+int printRow = 0;
+int printColumn = 0;
 
 //Function Headers
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
