@@ -203,15 +203,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				MessageBox(hwnd, "setCommState failed", "", NULL);
 				break;
 			}
-			//Receive();
-
 
 			if (ResumeThread(readInputBufferThread) == -1) {
 				MessageBox(hwnd, "could not resume readInputBufferThread, my lord", "", NULL);
 			}
-
-
-			//Receive();
 
 			break;
 			//Disconnect menu button pressed
