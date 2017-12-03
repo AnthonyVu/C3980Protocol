@@ -158,7 +158,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		switch (LOWORD(wParam))
 		{
 		case (MENU_CONNECT):
-			connectMode = true;
+			
 			
 			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0, 
 
@@ -168,6 +168,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				MessageBox(NULL, "Error opening COM port:", "", MB_OK);
 				return FALSE;
 			}
+
+			connectMode = true;
 
 			ct.ReadIntervalTimeout = MAXDWORD;
 			SetCommTimeouts(port, &ct);
@@ -193,14 +195,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				break;
 			}
 		
-			Receive();
+			//Receive();
 
-			/*
-			char a[518];
-			memset(a, 'a', 518);
-			inputBuffer = a;
-			print();
-			*/
 			break;
 		case (MENU_DISCONNECT):
 			connectMode = false;

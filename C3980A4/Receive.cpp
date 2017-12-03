@@ -5,8 +5,8 @@
 
 void Receive() {
 	DWORD bitsWritten;
-	char buffer[518];
-	memset(buffer, ' ', 518);
+	char recieveBuffer[518];
+	memset(recieveBuffer, 0, 518);
 	startTimer();
 	//start timer thread
 	int messagesRecieved = 0;
@@ -30,7 +30,7 @@ void Receive() {
 					ack[0] = (char)22;
 					ack[1] = (char)6;
 					WriteFile(port, ack, sizeof(ack), &bitsWritten, NULL);
-					inputBuffer = buffer;
+					inputBuffer = recieveBuffer;
 					print();
 					inputBuffer = NULL;
 					messagesRecieved++;
