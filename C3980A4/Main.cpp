@@ -332,11 +332,11 @@ VOID bidForLine()
 	return;
 }
 
-//https://www.codeguru.com/cpp/i-n/network/serialcommunications/article.php/c5425/Serial-Communication-in-Windows.htm wewwwww
 //thread function to read from input buffer
 DWORD readThread(LPDWORD lpdwParam1)
 {
-	DWORD nBytesRead, dwEvent, dwError;
+	DWORD nBytesRead = 0;
+	DWORD dwEvent, dwError;
 	COMSTAT cs;
 
 	SetCommMask(hComm, EV_RXCHAR);
@@ -346,19 +346,20 @@ DWORD readThread(LPDWORD lpdwParam1)
 		if (WaitCommEvent(hComm, &dwEvent, NULL))
 		{
 			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
-			ClearCommError(hComm, &dwError, &cs);
-			if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
-			{
-				if (!ReadFile(hComm, buffer, cs.cbInQue, &nBytesRead, NULL)) //need receive buffer to be extern to access
-				{
-					//error case, handle error here
-				}
-				else
-				{
-					//handle success
-				}
-			}
+			//ClearCommError(hComm, &dwError, &cs);
+			//if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
+			//{
+			//	if (!ReadFile(hComm, buffer, cs.cbInQue, &nBytesRead, NULL)) //need receive buffer to be extern to access
+			//	{
+			//		//error case, handle error here
+			//	}
+			//	else
+			//	{
+			//		//handle success
+			//	}
+			//}
 		}
 	}
 	PurgeComm(hComm, PURGE_RXCLEAR);
+	return nBytesRead;
 }
