@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <Windows.h>
 
-void prepareToSend(FILE *outputBuffer, HANDLE hComm);
+void prepareToSend(char *outputBuffer, HANDLE hComm);
 void addData();
 void send(HANDLE hComm);
 void addCRC();

@@ -10,9 +10,9 @@ extern int sent = 0;
 extern bool eot = false;
 extern char control[2] = { 0 };
 extern char line[518] = { 0 };
-FILE * filePtr = NULL;
+char * filePtr = NULL;
 
-void prepareToSend(FILE *outputBuffer, HANDLE hComm)
+void prepareToSend(char *outputBuffer, HANDLE hComm)
 {
 	sentCtrl = false;
 	while (sentCtrl == false)
