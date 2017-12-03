@@ -155,6 +155,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			/* handle error */
 			return 0;
 		} /* end if (error creating read thread) */
+		if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, CREATE_SUSPENDED, 0)) == INVALID_HANDLE_VALUE) {
+
+		}
 		break;
 	//Switch case to handle menu buttons
 	case WM_COMMAND:
@@ -194,6 +197,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			if (!SetCommState(port, &deviceContext)) {
 				MessageBox(hwnd, "setCommState failed", "", NULL);
 				break;
+			}
+
+			if (ResumeThread(readInputBufferThread) == -1) {
+				MessageBox(hwnd, "could not resume readInputBufferThread, my lord", "", NULL);
 			}
 		
 			Receive();
