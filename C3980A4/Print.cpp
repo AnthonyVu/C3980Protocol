@@ -12,8 +12,7 @@ void print() {
 	RECT rect;
 	int windowWidth;
 	int charHeight;
-	int row = 0;
-	int column = 0;
+	
 
 	GetTextMetrics(dc, &tm);
 	charHeight = tm.tmExternalLeading + tm.tmHeight;
@@ -24,11 +23,9 @@ void print() {
 
 
 	int nullCount = 0;
-	char temp[515];
+	char temp[514];
 	char buff[2];
-	strncpy_s(temp, inputBuffer, sizeof(temp) - 1);
-
-
+	strncpy_s(temp, inputBuffer, sizeof(temp));
 
 
 	for (int i = 2; i < 514; i++) {
@@ -39,21 +36,21 @@ void print() {
 		{
 			sprintf_s(buff, "%c", '\0');
 			while (nullCount > 0) {
-				if (column > windowWidth) {
-					column = 0;
-					row += 16;
+				if (printColumn > windowWidth) {
+					printColumn = 0;
+					printRow += 16;
 				}
-				TextOut(dc, column, row, buff, sizeof(buff));
-				column += 10;
+				TextOut(dc, printColumn, printRow, buff, sizeof(buff));
+				printColumn += 10;
 				nullCount--;
 			}
-			if (column > windowWidth - 25) {
-				column = 0;
-				row += 16;
+			if (printColumn > windowWidth - 25) {
+				printColumn = 0;
+				printRow += 16;
 			}
 			sprintf_s(buff, "%c", temp[i]);
-			TextOut(dc, column, row, buff, sizeof(buff));
-			column += 10;
+			TextOut(dc, printColumn, printRow, buff, sizeof(buff));
+			printColumn += 10;
 		}
 	}
 	ReleaseDC(hwnd, dc);

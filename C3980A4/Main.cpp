@@ -31,6 +31,8 @@ HANDLE readInputBufferThread;
 
 HWND hwnd;
 boolean connectMode = false;
+int printRow = 0;
+int printColumn = 0;
 
 //Function Headers
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -156,6 +158,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 			//Connect menu button pressed, should probably connect before setting connectMode=true
 		case (MENU_CONNECT):
+
 			if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
 				/* handle error */
 				return 0;
@@ -163,7 +166,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, CREATE_SUSPENDED, 0)) == INVALID_HANDLE_VALUE) {
 
 			}
+        
 			connectMode = true;
+
 
 			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0,
 				NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
@@ -172,6 +177,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				MessageBox(NULL, "Error opening COM port:", "", MB_OK);
 				return FALSE;
 			}
+
+			connectMode = true;
 
 			ct.ReadIntervalTimeout = MAXDWORD;
 			SetCommTimeouts(port, &ct);
@@ -198,18 +205,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			}
 			//Receive();
 
+
 			if (ResumeThread(readInputBufferThread) == -1) {
 				MessageBox(hwnd, "could not resume readInputBufferThread, my lord", "", NULL);
 			}
 
+
 			//Receive();
 
-			/*
-			char a[518];
-			memset(a, 'a', 518);
-			inputBuffer = a;
-			print();
-			*/
 			break;
 			//Disconnect menu button pressed
 		case (MENU_DISCONNECT):
