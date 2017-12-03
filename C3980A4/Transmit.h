@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <Windows.h>
 
-void prepareToSend(char *outputBuffer, HANDLE hComm);
+void prepareToSend(char *outputBuffer, HANDLE port);
 void addData();
-void send(HANDLE hComm);
+void send(HANDLE port);
 void addCRC();
 
 extern bool sentCtrl;
