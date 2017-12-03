@@ -5,8 +5,8 @@
 
 void Receive() {
 	DWORD bitsWritten;
-	char buffer[518];
-	memset(buffer, ' ', 518);
+	char buffer[518];	//rename to receiveBuffer?
+	memset(buffer, ' ', 518);	//memset to 0?
 	timeout = false;
 	startTimer();
 	//start timer thread
@@ -33,7 +33,6 @@ void Receive() {
 					return;
 				}
 				*/
-
 
 				/*
 				else if (buffer[1] == 2) {
