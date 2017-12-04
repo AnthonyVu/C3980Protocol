@@ -14,8 +14,8 @@
 #define MENU_QUIT				105
 #define MENU_FILE				106
 
-#define windowHeight			600
-#define windowWidth				400
+#define windowHeight			900
+#define windowWidth				1200
 
 extern bool timeout;
 extern bool linkedReset;
