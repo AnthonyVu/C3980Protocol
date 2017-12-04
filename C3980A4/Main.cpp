@@ -145,7 +145,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 	DCB deviceContext;
 	COMMTIMEOUTS ct = { 0 };
-	char settings[] = "9600,8,N,1";
+	char settings[] = "9600,N,8,0";
 
 	//File Input variables
 	DWORD dwBytesRead = 0;
@@ -169,13 +169,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			}
 
 			connectMode = true;
-			
-        
-			
-
-
-			
-			connectMode = true;
 
 			ct.ReadIntervalTimeout = MAXDWORD;
 			SetCommTimeouts(port, &ct);
@@ -190,11 +183,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				MessageBox(hwnd, "getCommState failed", "", NULL);
 				break;
 			}
-			/*
-			if (!BuildCommDCB(settings, &deviceContext)) {
+			
+			if (BuildCommDCB(settings, &deviceContext)) {
+				deviceContext.fOutxCtsFlow = FALSE;
+				deviceContext.fOutxDsrFlow = FALSE;
+				deviceContext.fDtrControl = DTR_CONTROL_DISABLE;
+				deviceContext.fOutX = FALSE;
+				deviceContext.fInX = FALSE;
+				deviceContext.fRtsControl = RTS_CONTROL_DISABLE;
+			}
+			else {
 				MessageBox(hwnd, "buildCommDCB failed", "", NULL);
 				break;
-			}*/
+			}
 
 			if (!SetCommState(port, &deviceContext)) {
 				MessageBox(hwnd, "setCommState failed", "", NULL);
@@ -343,7 +344,7 @@ VOID bidForLine()
 
 //thread function to read from input buffer
 DWORD readThread(LPDWORD lpdwParam1)
-{
+{ 
 	DWORD nBytesRead = 0;
 	DWORD dwEvent, dwError;
 	COMSTAT cs;
