@@ -49,7 +49,8 @@ DWORD readThread(LPDWORD);
 extern bool timeout = false;
 extern bool linkedReset = false;
 //FILE * outputBuffer = NULL;
-char inputBuffer[518];
+char inputBuffer[518] = { 0 };
+
 
 
 
@@ -84,6 +85,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	Wcl.lpszMenuName = "commandMenu";
 	Wcl.cbClsExtra = 0;
 	Wcl.cbWndExtra = 0;
+
 
 	if (!RegisterClassEx(&Wcl))
 		return 0;
@@ -125,8 +127,8 @@ VOID startTimer()
 
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 	timeout = true;
-	//MessageBox(hwnd, "test", "", MB_OK);
-	//KillTimer(hwnd, TIMER_TEST);
+	//MessageBox(hwnd, "timed out", "", MB_OK);
+	KillTimer(hwnd, TIMER_TEST);
 }
 
 VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped)
@@ -145,7 +147,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 	DCB deviceContext;
 	COMMTIMEOUTS ct = { 0 };
-	char settings[] = "9600,8,N,1";
+	char settings[] = "9600,N,8,1";
 
 	//File Input variables
 	DWORD dwBytesRead = 0;
@@ -178,7 +180,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			connectMode = true;
 
 			ct.ReadIntervalTimeout = MAXDWORD;
-			SetCommTimeouts(port, &ct);
+			//SetCommTimeouts(port, &ct);
 
 			//setup device context settings
 			if (!SetupComm(port, 8, 8)) {
@@ -190,11 +192,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				MessageBox(hwnd, "getCommState failed", "", NULL);
 				break;
 			}
-			/*
+			
 			if (!BuildCommDCB(settings, &deviceContext)) {
 				MessageBox(hwnd, "buildCommDCB failed", "", NULL);
 				break;
-			}*/
+			}
 
 			if (!SetCommState(port, &deviceContext)) {
 				MessageBox(hwnd, "setCommState failed", "", NULL);
@@ -353,19 +355,9 @@ DWORD readThread(LPDWORD lpdwParam1)
 
 	//temp bool used for read loop
 	while (connectMode) {
-		if (ReadFile(port, inputBuffer, sizeof(inputBuffer), &nBytesRead, NULL)) //need receive buffer to be extern to access
-		{
-			if (nBytesRead > 0) {
-				int i = 0;
-			}
-
-			//error case, handle error here
-
-		}
-		/*
 		if (WaitCommEvent(port, &dwEvent, NULL))
 		{
-			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
+			//MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
 			ClearCommError(port, &dwError, &cs);
 			if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
 			{
@@ -377,13 +369,13 @@ DWORD readThread(LPDWORD lpdwParam1)
 				else
 				{
 					//handle success
-					
+
 					int u = 0;
 				}
 			}
 		}
-		*/
+		PurgeComm(port, PURGE_RXCLEAR);
 	}
-	PurgeComm(port, PURGE_RXCLEAR);
+	
 	return nBytesRead;
 }
