@@ -318,11 +318,12 @@ VOID sendEnq()
 	char enq[2];
 	enq[0] = 22;
 	enq[1] = 5;
+	//PurgeComm(port, PURGE_RXCLEAR);
 	bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
 	if (!bwrite) {
 		MessageBox(hwnd, "i suck  at writefile", "", MB_OK);
 	}
-	PurgeComm(port, PURGE_RXCLEAR);
+	//PurgeComm(port, PURGE_RXCLEAR);
 }
 
 VOID bidForLine()
@@ -357,7 +358,7 @@ DWORD readThread(LPDWORD lpdwParam1)
 	while (connectMode) {
 		if (WaitCommEvent(port, &dwEvent, NULL))
 		{
-			//MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
+			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
 			ClearCommError(port, &dwError, &cs);
 			if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
 			{
