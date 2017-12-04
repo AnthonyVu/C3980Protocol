@@ -15,6 +15,7 @@ PROGRAM HEADER HERE
 char programName[] = "C3980 A4";
 char filePathBuffer[128];
 LPCSTR lpszCommName = "COM1";
+DCB deviceContext;
 
 HANDLE port;
 HANDLE timerThread;
@@ -22,7 +23,7 @@ HANDLE timerThread;
 //OpenFile Global Variables
 HANDLE fileHandle;
 OPENFILENAME ofn;
-char inputFileBuffer[2048];
+char inputFileBuffer[4096];
 OVERLAPPED ol;
 DWORD g_BytesTransferred;
 
@@ -49,7 +50,8 @@ DWORD readThread(LPDWORD);
 extern bool timeout = false;
 extern bool linkedReset = false;
 //FILE * outputBuffer = NULL;
-char inputBuffer[518];
+
+char inputBuffer[518] = {0};
 
 
 
@@ -84,6 +86,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	Wcl.lpszMenuName = "commandMenu";
 	Wcl.cbClsExtra = 0;
 	Wcl.cbWndExtra = 0;
+
 
 	if (!RegisterClassEx(&Wcl))
 		return 0;
@@ -125,8 +128,7 @@ VOID startTimer()
 
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 	timeout = true;
-	//MessageBox(hwnd, "test", "", MB_OK);
-	//KillTimer(hwnd, TIMER_TEST);
+	KillTimer(hwnd, TIMER_TEST);
 }
 
 VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped)
@@ -143,9 +145,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT paintstruct;
 	DWORD threadId; //unused?
 
-	DCB deviceContext;
+	
 	COMMTIMEOUTS ct = { 0 };
-	char settings[] = "9600,N,8,0";
+	char settings[] = "9600,N,8,1"; //"9600,N,8,1"
+
 
 	//File Input variables
 	DWORD dwBytesRead = 0;
@@ -171,7 +174,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			connectMode = true;
 
 			ct.ReadIntervalTimeout = MAXDWORD;
-			SetCommTimeouts(port, &ct);
+			//SetCommTimeouts(port, &ct);
 
 			//setup device context settings
 			if (!SetupComm(port, 8, 8)) {
@@ -275,7 +278,7 @@ VOID Idle()
 			startTimer();
 			while (!timeout)
 			{
-				MessageBox(hwnd, "idle", "", MB_OK);
+				//MessageBox(hwnd, "idle", "", MB_OK);
 				if (inputBuffer != NULL && inputBuffer[1] == 5)
 				{
 					Acknowledge();
@@ -297,10 +300,11 @@ VOID Idle()
 		}
 		else if (strlen(inputFileBuffer) > 0)
 		{
-			DWORD bytesWritten;
+			/*DWORD bytesWritten;
 			control[0] = 22;
 			control[1] = 5;
-			WriteFile(port, control, sizeof(control), &bytesWritten, NULL);
+			WriteFile(port, control, sizeof(control), &bytesWritten, NULL);*/
+			sendEnq();
 			bidForLine();
 		}
 	}
@@ -318,9 +322,10 @@ VOID Acknowledge()
 VOID sendEnq()
 {
 	DWORD dwBytesWritten;
-	char enq[1];
-	enq[0] = 5;
-	bool bwrite = WriteFile(port, (LPCVOID)inputFileBuffer, (DWORD)strlen(inputFileBuffer), &dwBytesWritten, NULL);
+	char enq[2];
+	enq[0] = 22;
+	enq[1] = 5;
+	bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
 }
 
 VOID bidForLine()
@@ -328,8 +333,8 @@ VOID bidForLine()
 	startTimer();
 	while (timeout != true)
 	{
-		MessageBox(hwnd, "bid", "", MB_OK);
-		if (inputBuffer != NULL)
+		//MessageBox(hwnd, "bid", "", MB_OK);
+		if (inputBuffer[0] == 22)
 		{
 			if (inputBuffer[1] == 6)
 			{
@@ -354,19 +359,9 @@ DWORD readThread(LPDWORD lpdwParam1)
 
 	//temp bool used for read loop
 	while (connectMode) {
-		if (ReadFile(port, inputBuffer, sizeof(inputBuffer), &nBytesRead, NULL)) //need receive buffer to be extern to access
-		{
-			if (nBytesRead > 0) {
-				int i = 0;
-			}
-
-			//error case, handle error here
-
-		}
-		/*
 		if (WaitCommEvent(port, &dwEvent, NULL))
 		{
-			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
+			//MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
 			ClearCommError(port, &dwError, &cs);
 			if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
 			{
@@ -378,13 +373,14 @@ DWORD readThread(LPDWORD lpdwParam1)
 				else
 				{
 					//handle success
-					
+
 					int u = 0;
 				}
 			}
 		}
-		*/
+		
+		PurgeComm(port, PURGE_RXCLEAR);
 	}
-	PurgeComm(port, PURGE_RXCLEAR);
+
 	return nBytesRead;
 }
