@@ -386,6 +386,9 @@ DWORD readThread(LPDWORD lpdwParam1)
 }
 
 BOOL readFromBuffer()
+{
+	return FALSE;
+}
 
 BOOL writeToBuffer(char* writeBuffer, DWORD dwNumToWrite)
 {
