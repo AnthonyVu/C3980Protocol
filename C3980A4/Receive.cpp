@@ -9,9 +9,10 @@ void Receive() {
 	//memset(recieveBuffer, 0, 518);
 	startTimer();
 	//start timer thread
+	memset(inputBuffer, 0, 518);
 	int messagesRecieved = 0;
 	while (!timeout && messagesRecieved != 10) {
-		if (inputBuffer != NULL) {
+		if (inputBuffer[0] == 22) {
 			 
 			//eot
 			if (inputBuffer[1] == 4) {
@@ -28,15 +29,16 @@ void Receive() {
 				//call validation on inpuBuffer
 				//if (validate(inputBuffer)) {
 					char ack[2];
-					ack[0] = (char)22;
-					ack[1] = (char)6;
+					ack[0] = 22;
+					ack[1] = 6;
 					WriteFile(port, ack, sizeof(ack), &bitsWritten, NULL);
-					
+					KillTimer(hwnd, TIMER_TEST);
+					startTimer();
 					print();
 					memset(inputBuffer, 0, 518);
 					messagesRecieved++;
 				//}
-				startTimer();
+				
 			
 			}	
 		}

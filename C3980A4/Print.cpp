@@ -24,7 +24,6 @@ void print() {
 
 
 	int nullCount = 0;
-	char temp[514];
 	char buff[2];
 	//strncpy_s(temp, inputBuffer, sizeof(temp));
 
@@ -49,7 +48,7 @@ void print() {
 				printColumn = 0;
 				printRow += 16;
 			}
-			sprintf_s(buff, "%c", temp[i]);
+			sprintf_s(buff, "%c", inputBuffer[i]);
 			TextOut(dc, printColumn, printRow, buff, sizeof(buff));
 			printColumn += 10;
 		}
