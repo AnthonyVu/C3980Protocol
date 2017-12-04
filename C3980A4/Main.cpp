@@ -384,3 +384,53 @@ DWORD readThread(LPDWORD lpdwParam1)
 
 	return nBytesRead;
 }
+
+BOOL readFromBuffer()
+
+BOOL writeToBuffer(char* writeBuffer, DWORD dwNumToWrite)
+{
+	OVERLAPPED osWrite = { 0 };
+	DWORD dwWritten;
+	DWORD dwRes;
+	BOOL result;
+
+	osWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	if (osWrite.hEvent == NULL)
+	{
+		return FALSE;
+	}
+
+	//Issue write
+	if (!WriteFile(port, writeBuffer, dwNumToWrite, &dwRes, &osWrite))
+	{
+		if (GetLastError() != ERROR_IO_PENDING)
+		{
+			result = FALSE;
+		}
+		else {
+			//Write is pending
+			dwRes = WaitForSingleObject(osWrite.hEvent, 2000);
+			switch (dwRes)
+			{
+			case WAIT_OBJECT_0:
+				if (!GetOverlappedResult(port, &osWrite, &dwWritten, FALSE))
+					result = FALSE;
+				else 
+					result = TRUE;
+				break;
+			default:
+				result = FALSE;
+				break;
+			}
+
+			
+		}
+	}
+	else  //WriteFile succeeded
+	{
+		result = TRUE;
+	}
+	return result;
+}
+
+
