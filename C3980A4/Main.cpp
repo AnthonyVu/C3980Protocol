@@ -23,7 +23,7 @@ HANDLE timerThread;
 //OpenFile Global Variables
 HANDLE fileHandle;
 OPENFILENAME ofn;
-char inputFileBuffer[4096];
+char inputFileBuffer[32768];
 OVERLAPPED ol;
 DWORD g_BytesTransferred;
 
@@ -65,12 +65,15 @@ extern char inputBuffer[518] = {0};
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
 {
+	COMMTIMEOUTS ct = { 0 };
+	char settings[] = "9600,N,8,1"; //"9600,N,8,1"
+
 	MSG Msg;
 	WNDCLASSEX Wcl;
 	PAINTSTRUCT paintstruct;
 	HDC hdc = BeginPaint(hwnd, &paintstruct);
 
-	FILE * s;
+	//FILE * s;
 	Wcl.cbSize = sizeof(WNDCLASSEX);
 	Wcl.style = CS_HREDRAW | CS_VREDRAW;
 	Wcl.hIcon = LoadIcon(NULL, IDI_APPLICATION);
@@ -108,6 +111,45 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
 
+	if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0,
+		NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
+		== INVALID_HANDLE_VALUE)
+	{
+		MessageBox(NULL, "Error opening COM port:", "", MB_OK);
+		return FALSE;
+	}
+
+	connectMode = true;
+
+	ct.ReadIntervalTimeout = MAXDWORD;
+	//SetCommTimeouts(port, &ct);
+
+	//setup device context settings
+	if (!SetupComm(port, 8, 8)) { //is it supposed to be 8?
+		MessageBox(hwnd, "setupComm failed", "", NULL);
+	}
+
+	if (!GetCommState(port, &deviceContext)) {
+		MessageBox(hwnd, "getCommState failed", "", NULL);
+	}
+
+	if (BuildCommDCB(settings, &deviceContext)) {
+		deviceContext.fOutxCtsFlow = FALSE;
+		deviceContext.fOutxDsrFlow = FALSE;
+		deviceContext.fDtrControl = DTR_CONTROL_DISABLE;
+		deviceContext.fOutX = FALSE;
+		deviceContext.fInX = FALSE;
+		deviceContext.fRtsControl = RTS_CONTROL_DISABLE;
+	}
+	else {
+		MessageBox(hwnd, "buildCommDCB failed", "", NULL);
+	}
+
+	if (!SetCommState(port, &deviceContext)) {
+		MessageBox(hwnd, "setCommState failed", "", NULL);
+	}
+
+
 	while (GetMessage(&Msg, NULL, 0, 0))
 	{
 		TranslateMessage(&Msg);
@@ -128,6 +170,7 @@ VOID startTimer()
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 	timeout = true;
 	KillTimer(hwnd, TIMER_TEST);
+	MessageBox(hwnd, "Timed out.", "", NULL);
 }
 
 VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped)
@@ -145,8 +188,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	DWORD threadId; //unused?
 
 	
-	COMMTIMEOUTS ct = { 0 };
-	char settings[] = "9600,N,8,1"; //"9600,N,8,1"
 
 
 	//File Input variables
@@ -162,51 +203,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		case (MENU_CONNECT):
 
 			connectMode = true;
-        
-
-			if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0,
-				NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
-				== INVALID_HANDLE_VALUE)
-			{
-				MessageBox(NULL, "Error opening COM port:", "", MB_OK);
-				return FALSE;
-			}
-
-			ct.ReadIntervalTimeout = MAXDWORD;
-			//SetCommTimeouts(port, &ct);
-
-			//setup device context settings
-			if (!SetupComm(port, 8, 8)) {
-				MessageBox(hwnd, "setupComm failed", "", NULL);
-				break;
-			}
-
-			if (!GetCommState(port, &deviceContext)) {
-				MessageBox(hwnd, "getCommState failed", "", NULL);
-				break;
-			}
-			
-			if (BuildCommDCB(settings, &deviceContext)) {
-				deviceContext.fOutxCtsFlow = FALSE;
-				deviceContext.fOutxDsrFlow = FALSE;
-				deviceContext.fDtrControl = DTR_CONTROL_DISABLE;
-				deviceContext.fOutX = FALSE;
-				deviceContext.fInX = FALSE;
-				deviceContext.fRtsControl = RTS_CONTROL_DISABLE;
-			}
-			else {
-				MessageBox(hwnd, "buildCommDCB failed", "", NULL);
-				break;
-			}
-
-			if (!SetCommState(port, &deviceContext)) {
-				MessageBox(hwnd, "setCommState failed", "", NULL);
-				break;
-			}
-			
+        			
 			if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
 				/* handle error */
-				return 0;
+				//return 0;
+				MessageBox(hwnd, "Could not create idleThread", "", NULL);
 			} /* end if (error creating read thread) */
 			if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
 			}
@@ -214,7 +215,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			//	MessageBox(hwnd, "could not resume readInputBufferThread, my lord", "", NULL);
 			//}
 			
-
 			break;
 			//Disconnect menu button pressed
 		case (MENU_DISCONNECT):
@@ -234,17 +234,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					MessageBox(hwnd, "I could not open the file master.", "", NULL);
 				}
 
-				if (ReadFileEx(fileHandle, inputFileBuffer, sizeof(inputFileBuffer) - 1, &ol, FileIOCompletionRoutine))
+				if (!ReadFileEx(fileHandle, inputFileBuffer, sizeof(inputFileBuffer) - 1, &ol, FileIOCompletionRoutine))
 				{
 					//DisplayError(TEXT("ReadFile"));
-					//MessageBox(hwnd, inputFileBuffer, "", NULL);
+					MessageBox(hwnd, inputFileBuffer, "", NULL);
 					//printf("%s", inputFileBuffer);
 				}
 				//if (dwBytesRead > 0 && dwBytesRead <= sizeof(inputFileBuffer) - 1)
 				//{
 					//sprintf_s(inputFileBuffer, "%s", fileHandle);
 				//}
-
 			}
 			break;
 		}
@@ -269,7 +268,7 @@ VOID Idle()
 {
 	while (true)
 	{
-		if (linkedReset)
+		if (/*linkedReset*/ false)
 		{
 			startTimer();
 			while (!timeout)
@@ -285,7 +284,7 @@ VOID Idle()
 				}
 			}
 		}
-		if (inputBuffer != NULL && strlen(inputBuffer) > 0)
+		if (inputBuffer[0] == 22 && strlen(inputBuffer) > 0)
 		{
 	
 			if (inputBuffer[1] == 5)
@@ -296,12 +295,9 @@ VOID Idle()
 		}
 		else if (strlen(inputFileBuffer) > 0)
 		{
-			/*DWORD bytesWritten;
-			control[0] = 22;
-			control[1] = 5;
-			WriteFile(port, control, sizeof(control), &bytesWritten, NULL);*/
 			sendEnq();
 			bidForLine();
+			fprintf(stderr, "asdf");
 		}
 	}
 }
@@ -321,22 +317,26 @@ VOID sendEnq()
 	char enq[2];
 	enq[0] = 22;
 	enq[1] = 5;
+	//PurgeComm(port, PURGE_RXCLEAR);
 	bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
+	if (!bwrite) {
+		MessageBox(hwnd, "i suck  at writefile", "", MB_OK);
+	}
+	//PurgeComm(port, PURGE_RXCLEAR);
 }
 
 VOID bidForLine()
 {
+	MessageBox(hwnd, "Calling bidForLine()", "", NULL);
 	startTimer();
 	while (timeout != true)
 	{
 		//MessageBox(hwnd, "bid", "", MB_OK);
-		if (inputBuffer[0] == 22)
+		if (inputBuffer[0] == 22 && inputBuffer[1] == 6)
 		{
-			if (inputBuffer[1] == 6)
-			{
-				timeout = true;
-				prepareToSend(inputFileBuffer, port);
-			}
+			memset(inputBuffer, 0, 518);
+			prepareToSend(inputFileBuffer, port);
+			timeout = true;
 		}
 	}
 	linkedReset = true;
@@ -357,7 +357,7 @@ DWORD readThread(LPDWORD lpdwParam1)
 	while (connectMode) {
 		if (WaitCommEvent(port, &dwEvent, NULL))
 		{
-			//MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
+			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
 			ClearCommError(port, &dwError, &cs);
 			if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
 			{
@@ -369,12 +369,10 @@ DWORD readThread(LPDWORD lpdwParam1)
 				else
 				{
 					//handle success
-
 					int u = 0;
 				}
 			}
 		}
-		
 		PurgeComm(port, PURGE_RXCLEAR);
 	}
 	return nBytesRead;
