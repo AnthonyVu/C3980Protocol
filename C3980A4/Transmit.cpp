@@ -5,6 +5,7 @@
 #include "Print.h"
 
 
+
 extern bool sentCtrl = false;
 extern int sent = 0;
 extern bool eot = false;
@@ -77,14 +78,17 @@ void send(HANDLE port)
 		if (eot == true)
 		{
 			sent = 0;
-			bool bwrite = WriteFile(port, (LPCVOID)control, (DWORD)strlen(control), &dwBytesWritten, NULL);
+			//bool bwrite = WriteFile(port, (LPCVOID)control, (DWORD)strlen(control), &dwBytesWritten, NULL);
+			bool bwrite = writeToPort(control, 2);
 			return;
 			//send control frame
 		}
 		else
 		{
 			//send line frame
-			bool bwrite = WriteFile(port, (LPCVOID)line, (DWORD)strlen(line), &dwBytesWritten, NULL);
+			//bool bwrite = WriteFile(port, (LPCVOID)line, (DWORD)strlen(line), &dwBytesWritten, NULL);
+			bool bwrite = writeToPort(line, strlen(line));
+			
 			while (timeout == false)
 			{
 				if (inputBuffer[0] == 22)

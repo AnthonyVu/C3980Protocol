@@ -123,8 +123,13 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 
 	connectMode = true;
 
-	ct.ReadIntervalTimeout = MAXDWORD;
-	//SetCommTimeouts(port, &ct);
+	ct.ReadIntervalTimeout = 500;
+	//ct.ReadIntervalTimeout = 2000;
+	ct.ReadTotalTimeoutMultiplier = 500;
+	ct.ReadTotalTimeoutConstant = 500;
+	ct.WriteTotalTimeoutMultiplier = 500;
+	ct.WriteTotalTimeoutConstant = 500;
+	SetCommTimeouts(port, &ct);
 
 	//setup device context settings
 	if (!SetupComm(port, 8, 8)) { //is it supposed to be 8?
@@ -289,7 +294,7 @@ VOID Idle()
 			if (inputBuffer[1] == 5)
 			{
 				Acknowledge();
-				break;
+				//break;
 			}
 		}
 		else if (strlen(inputFileBuffer) > 0)
@@ -359,7 +364,7 @@ DWORD readThread(LPDWORD lpdwParam1)
 	while (connectMode) {
 		if (WaitCommEvent(port, &dwEvent, NULL))
 		{
-			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
+			//MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
 			ClearCommError(port, &dwError, &cs);
 
 			osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
