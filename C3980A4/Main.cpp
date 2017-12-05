@@ -308,7 +308,7 @@ VOID Acknowledge()
 	DWORD bytesWritten;
 	control[0] = 22;
 	control[1] = 6;
-	WriteFile(port, control, sizeof(control), &bytesWritten, NULL);
+	writeToBuffer(control, sizeof(control));
 	Receive();
 }
 
@@ -319,7 +319,8 @@ VOID sendEnq()
 	enq[0] = 22;
 	enq[1] = 5;
 	//PurgeComm(port, PURGE_RXCLEAR);
-	bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
+	//bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
+	bool bwrite = writeToBuffer(enq, 2);
 	if (!bwrite) {
 		MessageBox(hwnd, "i suck  at writefile", "", MB_OK);
 	}

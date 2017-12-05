@@ -22,3 +22,4 @@ extern bool linkedReset;
 extern char inputBuffer[];
 
 VOID startTimer();
+BOOL writeToBuffer(char* writeBuffer, DWORD dwNumToWrite);

@@ -77,14 +77,14 @@ void send(HANDLE port)
 		if (eot == true)
 		{
 			sent = 0;
-			bool bwrite = WriteFile(port, (LPCVOID)control, (DWORD)strlen(control), &dwBytesWritten, NULL);
+			bool bwrite = writeToBuffer(control, (DWORD)strlen(control));
 			return;
 			//send control frame
 		}
 		else
 		{
 			//send line frame
-			bool bwrite = WriteFile(port, (LPCVOID)line, (DWORD)strlen(line), &dwBytesWritten, NULL);
+			bool bwrite = writeToBuffer(line, (DWORD)strlen(line));
 			while (timeout == false)
 			{
 				if (inputBuffer[0] == 22)

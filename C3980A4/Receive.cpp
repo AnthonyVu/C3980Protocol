@@ -21,7 +21,7 @@ void Receive() {
 				char rvi[2];
 				rvi[0] = 22;
 				//rvi[1] = (char) ? ;
-				WriteFile(port, rvi, sizeof(rvi), &bitsWritten, NULL);
+				writeToBuffer(rvi, sizeof(rvi));
 				return;
 
 			}
@@ -31,7 +31,7 @@ void Receive() {
 					char ack[2];
 					ack[0] = 22;
 					ack[1] = 6;
-					WriteFile(port, ack, sizeof(ack), &bitsWritten, NULL);
+					writeToBuffer(ack, sizeof(ack));
 					KillTimer(hwnd, TIMER_TEST);
 					startTimer();
 					print();
