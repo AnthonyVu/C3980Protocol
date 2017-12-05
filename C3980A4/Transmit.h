@@ -1,11 +1,11 @@
 #pragma once
 #include <stdio.h>
 #include <Windows.h>
-
+#include <stdint.h>
 void prepareToSend(char *outputBuffer, HANDLE hComm);
 void addData();
 void send(HANDLE hComm);
-void addCRC();
+uint32_t addCRC(char data[]);
 void printT();
 
 extern bool sentCtrl;

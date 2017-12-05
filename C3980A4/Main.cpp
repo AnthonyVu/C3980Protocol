@@ -5,6 +5,7 @@ PROGRAM HEADER HERE
 #include <Windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "Header.h"
 #include "Main.h"
 #include "Receive.h"
@@ -95,8 +96,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	/*
 	char hello[] = "hello";
 	char bye[] = "bye";
-	uint32_t test = CRC::Calculate(hello, strlen(hello), CRC::CRC_32());
-	bool passed = Validation(test, hello);
+	uint32_t test = addCRC(hello);
+	bool passed = Validation(test, bye);
 	unsigned char bytes[4];
 	unsigned long n = test;
 
@@ -340,7 +341,7 @@ VOID Acknowledge()
 
 BOOL Validation(uint32_t receivedCRC, char input[])
 {
-	uint32_t crc = CRC::Calculate(input, strlen(input), CRC::CRC_32());
+	uint32_t crc = addCRC(input);
 	return crc == receivedCRC;
 }
 

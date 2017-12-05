@@ -3,7 +3,7 @@
 #include "Receive.h"
 #include "Transmit.h"
 #include "Print.h"
-
+#include "crc.h"
 
 
 extern bool sentCtrl = false;
@@ -37,7 +37,7 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 			line[0] = 22;
 			line[1] = 2;
 			addData();
-			addCRC();
+			//uint32_t crc = addCRC(line);
 		}
 		send(port);
 	}
@@ -86,7 +86,7 @@ void send(HANDLE port)
 		{
 			//send line frame
 			bool bwrite = writeToPort(line, strlen(line));
-			
+
 			while (timeout == false)
 			{
 				if (inputBuffer[0] == 22)
@@ -111,9 +111,9 @@ void send(HANDLE port)
 	return;
 }
 
-void addCRC()
+uint32_t addCRC(char data[])
 {
-
+	return CRC::Calculate(data, strlen(data), CRC::CRC_32());
 }
 
 
