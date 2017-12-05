@@ -38,7 +38,7 @@ int printColumn = 0;
 //Function Headers
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
-VOID startTimer();
+VOID startTimer(unsigned int time);
 VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
 VOID Idle();
 VOID Acknowledge();
@@ -167,10 +167,10 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 
 
 
-VOID startTimer()
+VOID startTimer(unsigned int time)
 {
 	timeout = false;
-	SetTimer(hwnd, TIMER_TEST, TEST_TIMEOUT, TimerProc);
+	SetTimer(hwnd, TIMER_TEST, time, TimerProc);
 }
 
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
@@ -273,13 +273,15 @@ VOID Idle()
 	{
 		if (linkedReset != false)
 		{
-			startTimer();
+			startTimer(10000);
 			while (!timeout)
 			{
 				//MessageBox(hwnd, "idle", "", MB_OK);
-				if (inputBuffer != NULL && inputBuffer[1] == 5)
+				if (inputBuffer[0] == 22 && inputBuffer[1] == 5)
 				{
 					Acknowledge();
+					break;
+					//memset(inputBuffer, 0, 518);
 				}
 				if (timeout)
 				{
@@ -328,7 +330,7 @@ VOID sendEnq()
 VOID bidForLine()
 {
 	//MessageBox(hwnd, "Calling bidForLine()", "", NULL);
-	startTimer();
+	startTimer(5000);
 	while (timeout != true)
 	{
 		//MessageBox(hwnd, "bid", "", MB_OK);

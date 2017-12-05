@@ -74,7 +74,7 @@ void send(HANDLE port)
 	while (retransmitCount < 3)
 	{
 		//KillTimer(hwnd, TIMER_TEST);
-		startTimer();
+		startTimer(5000);
 		timeout = false;
 		if (eot == true)
 		{

@@ -21,5 +21,5 @@ extern bool timeout;
 extern bool linkedReset;
 extern char inputBuffer[];
 
-VOID startTimer();
+VOID startTimer(unsigned int time);
 BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite);
