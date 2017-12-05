@@ -8,7 +8,7 @@ void Receive() {
 	char receiveBuffer[518];
 	//char * currIndex = receiveBuffer;
 	//memset(recieveBuffer, 0, 518);
-	startTimer();
+	startTimer(5000);
 	//start timer thread
 	memset(inputBuffer, 0, 518);
 	//int messagesRecieved = 0;
@@ -41,7 +41,7 @@ void Receive() {
 						KillTimer(hwnd, TIMER_TEST);
 						//WriteFile(port, ack, sizeof(ack), &bitsWritten, NULL);
 						bool bwrite = writeToPort(ack, 2);
-						startTimer();
+						startTimer(5000);
 						memset(inputBuffer, 0, 518);
 						memset(receiveBuffer, 0, 518);
 					//	messagesRecieved++;
