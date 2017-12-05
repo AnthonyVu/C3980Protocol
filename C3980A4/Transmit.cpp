@@ -40,6 +40,7 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 		}
 		send(port);
 	}
+	eot = false;
 }
 
 void addData()
@@ -77,14 +78,14 @@ void send(HANDLE port)
 		if (eot == true)
 		{
 			sent = 0;
-			bool bwrite = writeToBuffer(control, (DWORD)strlen(control));
+			bool bwrite = writeToPort(control, (DWORD)strlen(control));
 			return;
 			//send control frame
 		}
 		else
 		{
 			//send line frame
-			bool bwrite = writeToBuffer(line, (DWORD)strlen(line));
+			bool bwrite = writeToPort(line, (DWORD)strlen(line));
 			while (timeout == false)
 			{
 				if (inputBuffer[0] == 22)
@@ -92,7 +93,8 @@ void send(HANDLE port)
 					if (inputBuffer[1] == 6)
 					{
 						sent++;
-						printT();
+						//printT();
+						memset(inputBuffer, 0, 518);
 						return;
 					}
 					if (inputBuffer[1] == 21)
