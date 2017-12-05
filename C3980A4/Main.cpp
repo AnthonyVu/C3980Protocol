@@ -93,11 +93,10 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	Wcl.cbClsExtra = 0;
 	Wcl.cbWndExtra = 0;
 
-	/*
-	char hello[] = "hello";
+	char hello[10] = "hello";
 	char bye[] = "bye";
-	uint32_t test = addCRC(hello);
-	bool passed = Validation(test, bye);
+	uint32_t test = CRC::Calculate(hello, strlen(hello), CRC::CRC_32());
+	bool passed = Validation(test, hello);
 	unsigned char bytes[4];
 	unsigned long n = test;
 
@@ -105,7 +104,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	bytes[1] = (n >> 16) & 0xFF;
 	bytes[2] = (n >> 8) & 0xFF;
 	bytes[3] = n & 0xFF;
-	*/
+	addCRC(hello, bytes);
+
 	if (!RegisterClassEx(&Wcl))
 		return 0;
 
@@ -178,8 +178,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 
 	return Msg.wParam;
 }
-
-
 
 VOID startTimer(unsigned int time)
 {
@@ -312,7 +310,7 @@ VOID Idle()
 		else if (strlen(inputFileBuffer) > 0)
 		{
 			/*
-			uint32_t test = CRC::Calculate(inputFileBuffer, strlen(inputFileBuffer), CRC::CRC_32());
+			uint32_t test = addCRC(inputFileBuffer);
 			bool passed = Validation(test, inputFileBuffer);
 			unsigned char bytes[4];
 			unsigned long n = test;
@@ -339,9 +337,10 @@ VOID Acknowledge()
 	Receive();
 }
 
-BOOL Validation(uint32_t receivedCRC, char input[])
+
+BOOL Validation(uint32_t receivedCRC, char* input)
 {
-	uint32_t crc = addCRC(input);
+	uint32_t crc = CRC::Calculate(input, strlen(input), CRC::CRC_32());
 	return crc == receivedCRC;
 }
 

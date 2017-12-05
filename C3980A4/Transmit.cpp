@@ -4,7 +4,7 @@
 #include "Transmit.h"
 #include "Print.h"
 #include "crc.h"
-
+#include <stdint.h>
 
 extern bool sentCtrl = false;
 extern int sent = 0;
@@ -37,7 +37,15 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 			line[0] = 22;
 			line[1] = 2;
 			addData();
-			//uint32_t crc = addCRC(line);
+			uint32_t crc = CRC::Calculate(line, strlen(line), CRC::CRC_32());
+			unsigned char bytes[4];
+			unsigned long n = crc;
+
+			bytes[0] = (n >> 24) & 0xFF;
+			bytes[1] = (n >> 16) & 0xFF;
+			bytes[2] = (n >> 8) & 0xFF;
+			bytes[3] = n & 0xFF;
+			addCRC(line, bytes);
 		}
 		send(port);
 	}
@@ -111,9 +119,12 @@ void send(HANDLE port)
 	return;
 }
 
-uint32_t addCRC(char data[])
+VOID addCRC(char* data, unsigned char* crc)
 {
-	return CRC::Calculate(data, strlen(data), CRC::CRC_32());
+	data[sizeof(data) - 3] = crc[0];
+	data[sizeof(data) - 2] = crc[1];
+	data[sizeof(data) - 1] = crc[2];
+	data[sizeof(data)] = crc[3];
 }
 
 
