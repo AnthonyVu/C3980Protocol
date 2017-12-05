@@ -41,7 +41,6 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 		}
 		send(port);
 	}
-	eot = false;
 }
 
 void addData()

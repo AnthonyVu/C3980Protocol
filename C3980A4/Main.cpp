@@ -277,7 +277,8 @@ VOID Idle()
 			while (!timeout)
 			{
 				//MessageBox(hwnd, "idle", "", MB_OK);
-				if (inputBuffer[0] == 22 && inputBuffer[1] == 5)
+
+				if (inputBuffer[0] == 22 && inputBuffer[1] == 5 && strlen(inputBuffer) > 0)
 				{
 					Acknowledge();
 					break;
@@ -292,6 +293,7 @@ VOID Idle()
 		if (inputBuffer[0] == 22 && inputBuffer[1] == 5 && strlen(inputBuffer) > 0)
 		{
 				Acknowledge();
+				//memset(inputBuffer, 0, 518);
 		}
 		else if (strlen(inputFileBuffer) > 0)
 		{
@@ -338,6 +340,7 @@ VOID bidForLine()
 		{
 			memset(inputBuffer, 0, 518);
 			prepareToSend(inputFileBuffer, port);
+			eot = false;
 			memset(inputBuffer, 0, 518);
 			timeout = true;
 		}
