@@ -54,5 +54,6 @@ void print() {
 			printColumn += length.cx;
 		}
 	}
+	size_t gh = strlen(inputBuffer);
 	ReleaseDC(hwnd, dc);
 }

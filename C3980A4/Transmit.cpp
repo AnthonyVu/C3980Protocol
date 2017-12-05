@@ -5,6 +5,7 @@
 #include "Print.h"
 
 
+
 extern bool sentCtrl = false;
 extern int sent = 0;
 extern bool eot = false;
@@ -85,7 +86,8 @@ void send(HANDLE port)
 		else
 		{
 			//send line frame
-			bool bwrite = writeToPort(line, (DWORD)strlen(line));
+			bool bwrite = writeToPort(line, strlen(line));
+			
 			while (timeout == false)
 			{
 				if (inputBuffer[0] == 22)
