@@ -11,22 +11,21 @@ void print() {
 	   
 	TEXTMETRIC tm;
 	RECT rect;
-	//int windowWidth;
+	int currentWindowWidth;
 	int charHeight;
+	SIZE length;
 	
 
 	GetTextMetrics(dc, &tm);
 	charHeight = tm.tmExternalLeading + tm.tmHeight;
 
 	GetWindowRect(hwnd, &rect);
-	//windowWidth = rect.right - rect.left;
-
+	currentWindowWidth = rect.right - rect.left;
 
 
 	int nullCount = 0;
 	char buff[2];
-	//strncpy_s(temp, inputBuffer, sizeof(temp));
-
+	
 
 	for (int i = 2; i < 514; i++) {
 		if (inputBuffer[i] == NULL) {
@@ -35,22 +34,24 @@ void print() {
 		else 
 		{
 			sprintf_s(buff, "%c", '\0');
+			GetTextExtentPoint32(dc, buff, 1, &length);
 			while (nullCount > 0) {
-				if (printColumn > windowWidth) {
+				if (printColumn > currentWindowWidth - 25) {
 					printColumn = 0;
-					printRow += 16;
+					printRow += charHeight;
 				}
 				TextOut(dc, printColumn, printRow, buff, sizeof(buff));
-				printColumn += 10;
+				printColumn += length.cx;
 				nullCount--;
 			}
-			if (printColumn > windowWidth - 25) {
+			if (printColumn > currentWindowWidth - 25) {
 				printColumn = 0;
-				printRow += 16;
+				printRow += charHeight;
 			}
 			sprintf_s(buff, "%c", inputBuffer[i]);
+			GetTextExtentPoint32(dc, buff, 1, &length);
 			TextOut(dc, printColumn, printRow, buff, sizeof(buff));
-			printColumn += 10;
+			printColumn += length.cx;
 		}
 	}
 	ReleaseDC(hwnd, dc);
