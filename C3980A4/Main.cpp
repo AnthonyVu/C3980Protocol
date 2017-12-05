@@ -10,7 +10,7 @@ PROGRAM HEADER HERE
 #include "Receive.h"
 #include "Transmit.h"
 #include "Print.h"
-
+#include "crc.h"
 
 char programName[] = "C3980 A4";
 char filePathBuffer[128];
@@ -42,6 +42,7 @@ VOID startTimer(unsigned int time);
 VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
 VOID Idle();
 VOID Acknowledge();
+BOOL Validation(uint32_t receivedCRC, char input[]);
 void bidForLine();
 void sendEnq();
 DWORD readThread(LPDWORD);
@@ -52,7 +53,7 @@ extern bool timeout = false;
 extern bool linkedReset = false;
 //FILE * outputBuffer = NULL;
 
-char inputBuffer[518] = {0};
+char inputBuffer[518] = { 0 };
 
 
 
@@ -91,7 +92,19 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	Wcl.cbClsExtra = 0;
 	Wcl.cbWndExtra = 0;
 
+	/*
+	char hello[] = "hello";
+	char bye[] = "bye";
+	uint32_t test = CRC::Calculate(hello, strlen(hello), CRC::CRC_32());
+	bool passed = Validation(test, hello);
+	unsigned char bytes[4];
+	unsigned long n = test;
 
+	bytes[0] = (n >> 24) & 0xFF;
+	bytes[1] = (n >> 16) & 0xFF;
+	bytes[2] = (n >> 8) & 0xFF;
+	bytes[3] = n & 0xFF;
+	*/
 	if (!RegisterClassEx(&Wcl))
 		return 0;
 
@@ -204,7 +217,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 			//Connect menu button pressed, should probably connect before setting connectMode=true
 		case (MENU_CONNECT):
-			
+
 			if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
 				MessageBox(hwnd, "Could not create readinputbufferthread", "", NULL);
 			}
@@ -292,11 +305,22 @@ VOID Idle()
 		}
 		if (inputBuffer[0] == 22 && inputBuffer[1] == 5 && strlen(inputBuffer) > 0)
 		{
-				Acknowledge();
-				//memset(inputBuffer, 0, 518);
+			Acknowledge();
+			//memset(inputBuffer, 0, 518);
 		}
 		else if (strlen(inputFileBuffer) > 0)
 		{
+			/*
+			uint32_t test = CRC::Calculate(inputFileBuffer, strlen(inputFileBuffer), CRC::CRC_32());
+			bool passed = Validation(test, inputFileBuffer);
+			unsigned char bytes[4];
+			unsigned long n = test;
+
+			bytes[0] = (n >> 24) & 0xFF;
+			bytes[1] = (n >> 16) & 0xFF;
+			bytes[2] = (n >> 8) & 0xFF;
+			bytes[3] = n & 0xFF;
+			*/
 			sendEnq();
 			bidForLine();
 			fprintf(stderr, "asdf");
@@ -312,6 +336,12 @@ VOID Acknowledge()
 	bool write = writeToPort(control, 2);
 	//WriteFile(port, control, sizeof(control), &bytesWritten, NULL);
 	Receive();
+}
+
+BOOL Validation(uint32_t receivedCRC, char input[])
+{
+	uint32_t crc = CRC::Calculate(input, strlen(input), CRC::CRC_32());
+	return crc == receivedCRC;
 }
 
 VOID sendEnq()
@@ -351,7 +381,7 @@ VOID bidForLine()
 
 //thread function to read from input buffer
 DWORD readThread(LPDWORD lpdwParam1)
-{ 
+{
 	DWORD nBytesRead = 0;
 	DWORD dwEvent, dwError;
 	COMSTAT cs;
@@ -427,7 +457,7 @@ BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 			case WAIT_OBJECT_0:
 				if (!GetOverlappedResult(port, &osWrite, &dwWritten, FALSE))
 					result = FALSE;
-				else 
+				else
 					result = TRUE;
 				break;
 			default:
