@@ -45,6 +45,7 @@ VOID Acknowledge();
 void bidForLine();
 void sendEnq();
 DWORD readThread(LPDWORD);
+BOOL writeToPort(char*, DWORD);
 
 
 extern bool timeout = false;
@@ -113,7 +114,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	UpdateWindow(hwnd);
 
 	if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0,
-		NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
+		NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL))
 		== INVALID_HANDLE_VALUE)
 	{
 		MessageBox(NULL, "Error opening COM port:", "", MB_OK);
@@ -187,9 +188,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	HDC hdc;
 	PAINTSTRUCT paintstruct;
 	DWORD threadId; //unused?
-
-	
-
 
 	//File Input variables
 	DWORD dwBytesRead = 0;
@@ -308,7 +306,8 @@ VOID Acknowledge()
 	DWORD bytesWritten;
 	control[0] = 22;
 	control[1] = 6;
-	WriteFile(port, control, sizeof(control), &bytesWritten, NULL);
+	bool write = writeToPort(control, 2);
+	//WriteFile(port, control, sizeof(control), &bytesWritten, NULL);
 	Receive();
 }
 
@@ -319,8 +318,9 @@ VOID sendEnq()
 	enq[0] = 22;
 	enq[1] = 5;
 	//PurgeComm(port, PURGE_RXCLEAR);
-	bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
-	if (!bwrite) {
+	bool write = writeToPort(enq, 2);
+	//bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
+	if (!write) {
 		MessageBox(hwnd, "i suck  at writefile", "", MB_OK);
 	}
 	//PurgeComm(port, PURGE_RXCLEAR);
@@ -350,6 +350,7 @@ DWORD readThread(LPDWORD lpdwParam1)
 	DWORD nBytesRead = 0;
 	DWORD dwEvent, dwError;
 	COMSTAT cs;
+	OVERLAPPED osReader = { 0 };
 	char a[10];
 
 	SetCommMask(port, EV_RXCHAR);
@@ -360,9 +361,17 @@ DWORD readThread(LPDWORD lpdwParam1)
 		{
 			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
 			ClearCommError(port, &dwError, &cs);
+
+			osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+			if (osReader.hEvent == NULL)
+			{
+				MessageBox(hwnd, "I COULD NOT CREATE HEVENT MASTER", "", NULL);
+				return 0;
+			}
+
 			if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
 			{
-				if (!ReadFile(port, inputBuffer, sizeof(inputBuffer), &nBytesRead, NULL)) //need receive buffer to be extern to access
+				if (!ReadFile(port, inputBuffer, sizeof(inputBuffer), &nBytesRead, &osReader)) //need receive buffer to be extern to access
 				{
 					//error case, handle error here
 					int i = 0;
@@ -384,7 +393,7 @@ BOOL readFromBuffer()
 	return FALSE;
 }
 
-BOOL writeToBuffer(char* writeBuffer, DWORD dwNumToWrite)
+BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 {
 	OVERLAPPED osWrite = { 0 };
 	DWORD dwWritten;
@@ -419,8 +428,6 @@ BOOL writeToBuffer(char* writeBuffer, DWORD dwNumToWrite)
 				result = FALSE;
 				break;
 			}
-
-			
 		}
 	}
 	else  //WriteFile succeeded
