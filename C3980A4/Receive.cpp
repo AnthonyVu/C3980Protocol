@@ -88,6 +88,10 @@ void Receive() {
 					startTimer(2000);
 					memset(inputBuffer, 0, 518);
 				}
+				else {
+					memset(inputBuffer, 0, 518);
+				}
+				
 			}
 		}
 	}
