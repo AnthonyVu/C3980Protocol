@@ -1,6 +1,37 @@
-/*
-PROGRAM HEADER HERE
-*/
+/*------------------------------------------------------------------------------------------------------------------
+-- SOURCE FILE: InotifyDaemon.c - An application that will monitor a specified
+-- directory for file creation/modification.
+--
+-- PROGRAM: inotd
+--
+-- FUNCTIONS:
+-- void daemonize (void)
+-- int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int ProcessFiles (char pathname[MAXPATHLEN])
+-- unsigned int GetProcessID (char *process)
+--
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- NOTES:
+-- The program will monitor a directory that is specified in a configuration file for any type of file
+-- modification activity (creation, read/write, deletion). The design uses the “inotify” kernel-level
+-- utility to obtain the file system event notification. The “select” system call is used to monitor
+-- the watch descriptor (returned from inotify).
+--
+-- Once select is triggered, the directory under watch is processed to determine the exact type of
+-- file activity. Once the created/modified files have been identified, they are moved to a separate
+-- archive directory. Before the archival process takes place, the system process table (/proc) is
+-- searched to verify that the modifying process is currently active and running.
+--
+-- Note that the application once invoked, will continue to execute as a daemon.
+----------------------------------------------------------------------------------------------------------------------*/
 #define STRICT
 #include <Windows.h>
 #include <stdio.h>
@@ -71,7 +102,30 @@ size_t numTimeouts = 0;
 
 //char inputBuffer[518] = {0};
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
 {
 	COMMTIMEOUTS ct = { 0 };
@@ -170,47 +224,46 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	return Msg.wParam;
 }
 
-
-VOID startTimer(unsigned int time)
-{
-	timeout = false;
-	SetTimer(hwnd, TIMER_TEST, time, TimerProc);
-}
-
-VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
-	//Timeout has occurred
-	timeout = true;
-	KillTimer(hwnd, TIMER_TEST);
-	//MessageBox(hwnd, "Timed out.", "", NULL);
-	//numTimeouts++;
-	updateInfo(&numTimeouts);
-
-}
-
-VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped)
-{
-	printf(TEXT("Error code:\t%x\n"), dwErrorCode);
-	printf(TEXT("Number of bytes: \t%x\n"), dwNumberOfBytesTransferred);
-	g_BytesTransferred = dwNumberOfBytesTransferred;
-}
-
-//Can we move WndProc up to be right below WinMain -Wilson
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;
 	PAINTSTRUCT paintstruct;
 	DWORD threadId; //unused?
 
-	//File Input variables
+					//File Input variables
 	DWORD dwBytesRead = 0;
 
 	switch (Message)
 	{
-	//Switch case to handle menu buttons
+		//Switch case to handle menu buttons
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		//Connect menu button pressed, should probably connect before setting connectMode=true
+			//Connect menu button pressed, should probably connect before setting connectMode=true
 		case (MENU_CONNECT):
 			if (!connectMode) {
 				connectMode = true;
@@ -227,15 +280,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				//}
 			}
 			break;
-		//Disconnect menu button pressed
+			//Disconnect menu button pressed
 		case (MENU_DISCONNECT):
 			connectMode = false;
 			break;
-		//Quit menu button pressed
+			//Quit menu button pressed
 		case (MENU_QUIT):
 			PostQuitMessage(0);
 			break;
-		//File menu button pressed
+			//File menu button pressed
 		case (MENU_FILE):
 			if (GetOpenFileName(&ofn) == TRUE)
 			{
@@ -273,6 +326,126 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 }
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
+VOID startTimer(unsigned int time)
+{
+	timeout = false;
+	SetTimer(hwnd, TIMER_TEST, time, TimerProc);
+}
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
+VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
+	//Timeout has occurred
+	timeout = true;
+	KillTimer(hwnd, TIMER_TEST);
+	//MessageBox(hwnd, "Timed out.", "", NULL);
+	//numTimeouts++;
+	updateInfo(&numTimeouts);
+
+}
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
+VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped)
+{
+	printf(TEXT("Error code:\t%x\n"), dwErrorCode);
+	printf(TEXT("Number of bytes: \t%x\n"), dwNumberOfBytesTransferred);
+	g_BytesTransferred = dwNumberOfBytesTransferred;
+}
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
 
 VOID Idle()
 {
@@ -325,6 +498,30 @@ VOID Idle()
 	}
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
 VOID Acknowledge()
 {
 	DWORD bytesWritten;
@@ -336,6 +533,30 @@ VOID Acknowledge()
 }
 
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
 
 VOID sendEnq()
 {
@@ -354,6 +575,31 @@ VOID sendEnq()
 		updateInfo(&numENQSent);
 	}
 }
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
 
 VOID bidForLine()
 {
@@ -382,7 +628,30 @@ VOID bidForLine()
 	return;
 }
 
-//thread function to read from input buffer
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
 DWORD readThread(LPDWORD lpdwParam1)
 {
 	DWORD nBytesRead = 0;
@@ -427,6 +696,30 @@ DWORD readThread(LPDWORD lpdwParam1)
 	return nBytesRead;
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
 BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 {
 	OVERLAPPED osWrite = { 0 };

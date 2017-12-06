@@ -7,7 +7,6 @@ void addCRC(char*, unsigned char*);
 void prepareToSend(char *outputBuffer, HANDLE port);
 void addData();
 void send(HANDLE port);
-void printT();
 
 extern bool sentCtrl;
 extern int sent;

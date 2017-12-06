@@ -1,9 +1,66 @@
-#include "Receive.h"
+/*------------------------------------------------------------------------------------------------------------------
+-- SOURCE FILE: InotifyDaemon.c - An application that will monitor a specified
+-- directory for file creation/modification.
+--
+-- PROGRAM: inotd
+--
+-- FUNCTIONS:
+-- void daemonize (void)
+-- int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int ProcessFiles (char pathname[MAXPATHLEN])
+-- unsigned int GetProcessID (char *process)
+--
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- NOTES:
+-- The program will monitor a directory that is specified in a configuration file for any type of file
+-- modification activity (creation, read/write, deletion). The design uses the “inotify” kernel-level
+-- utility to obtain the file system event notification. The “select” system call is used to monitor
+-- the watch descriptor (returned from inotify).
+--
+-- Once select is triggered, the directory under watch is processed to determine the exact type of
+-- file activity. Once the created/modified files have been identified, they are moved to a separate
+-- archive directory. Before the archival process takes place, the system process table (/proc) is
+-- searched to verify that the modifying process is currently active and running.
+--
+-- Note that the application once invoked, will continue to execute as a daemon.
+----------------------------------------------------------------------------------------------------------------------*/#include "Receive.h"
 #include "Header.h"
 #include "Print.h"
 #include "Main.h"
 #include "crc.h"
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
 void Receive() {
 	DWORD bitsWritten;
 	startTimer(2000);
@@ -50,7 +107,30 @@ void Receive() {
 	}
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: initialize_inotify_watch
+--
+-- DATE: March 16, 2008
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Aman Abdulla
+--
+-- PROGRAMMER: Aman Abdulla
+--
+-- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
+-- int fd: the descriptor returned by inotify_init()
+-- char pathname[MAXPATHLEN]: fully qualified pathname of
+-- directory to be watched.
+--
+-- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
+-- directory pathname.
+--
+-- NOTES:
+-- This function is used to generate a watch descriptor using a initialized descriptor from
+-- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
+-- to monitor for events, i.e., file activity inside the watched directory.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Validation(char* input)
 {
 	char temp[512];
