@@ -1,36 +1,37 @@
 /*------------------------------------------------------------------------------------------------------------------
--- SOURCE FILE: InotifyDaemon.c - An application that will monitor a specified
--- directory for file creation/modification.
+-- SOURCE FILE: Main.cpp - The main functions and the base state for both
+--						sending and recieving
 --
--- PROGRAM: inotd
+-- PROGRAM: C3980A4
 --
 -- FUNCTIONS:
--- void daemonize (void)
--- int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int ProcessFiles (char pathname[MAXPATHLEN])
--- unsigned int GetProcessID (char *process)
+-- int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
+-- LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+-- VOID startTimer(unsigned int time)
+-- VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+-- VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped)
+-- VOID Idle()
+-- VOID Acknowledge()
+-- VOID sendEnq()
+-- VOID bidForLine()
+-- DWORD readThread(LPDWORD lpdwParam1)
+-- BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 --
 --
 -- DATE: December 3, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS: 
 --
 -- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Haley Booker, Wilson Hu, Anthony Vu, Matthew Shew
 --
 -- NOTES:
--- The program will monitor a directory that is specified in a configuration file for any type of file
--- modification activity (creation, read/write, deletion). The design uses the “inotify” kernel-level
--- utility to obtain the file system event notification. The “select” system call is used to monitor
--- the watch descriptor (returned from inotify).
---
--- Once select is triggered, the directory under watch is processed to determine the exact type of
--- file activity. Once the created/modified files have been identified, they are moved to a separate
--- archive directory. Before the archival process takes place, the system process table (/proc) is
--- searched to verify that the modifying process is currently active and running.
---
--- Note that the application once invoked, will continue to execute as a daemon.
+-- The program starts the GUI and will allow the user to connect to the comm port. Connecting will put the
+-- program in idle. While in Idle the program waits for the user to add a file or for an Enq to be
+-- recieved. Depending on that the program will either start to send or recieve data and control frames.
+-- The main.cpp file also handles the threads and common functions. It has a timer to set timeouts and
+-- generic read and write functions that are event drivenn using an overlapped IO.
 ----------------------------------------------------------------------------------------------------------------------*/
 #define STRICT
 #include <Windows.h>
@@ -448,7 +449,6 @@ VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTr
 -- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
 -- to monitor for events, i.e., file activity inside the watched directory.
 ----------------------------------------------------------------------------------------------------------------------*/
-
 VOID Idle()
 {
 	while (true)
