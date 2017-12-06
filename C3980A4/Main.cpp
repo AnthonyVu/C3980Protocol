@@ -11,11 +11,11 @@
 -- unsigned int GetProcessID (char *process)
 --
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -106,11 +106,11 @@ size_t numTimeouts = 0;
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -228,11 +228,11 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -332,11 +332,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -362,11 +362,11 @@ VOID startTimer(unsigned int time)
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -396,11 +396,11 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -427,11 +427,11 @@ VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTr
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -503,11 +503,11 @@ VOID Idle()
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -538,11 +538,11 @@ VOID Acknowledge()
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -581,11 +581,11 @@ VOID sendEnq()
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -633,11 +633,11 @@ VOID bidForLine()
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -701,11 +701,11 @@ DWORD readThread(LPDWORD lpdwParam1)
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --

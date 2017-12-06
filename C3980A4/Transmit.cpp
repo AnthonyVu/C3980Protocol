@@ -11,26 +11,17 @@
 -- VOID addCRC(char* data, unsigned char* crc)
 --
 --
--- DATE: December 5, 2017
+-- DATE: December 3, 2017
 --
 -- REVISIONS: 
 --
--- DESIGNER: Haley Booker, Wilson Hu, Anthony Vu, Matthew Shew
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Haley Booker, Anthony Vu
 --
 -- NOTES:
--- The program will monitor a directory that is specified in a configuration file for any type of file
--- modification activity (creation, read/write, deletion). The design uses the “inotify” kernel-level
--- utility to obtain the file system event notification. The “select” system call is used to monitor
--- the watch descriptor (returned from inotify).
---
--- Once select is triggered, the directory under watch is processed to determine the exact type of
--- file activity. Once the created/modified files have been identified, they are moved to a separate
--- archive directory. Before the archival process takes place, the system process table (/proc) is
--- searched to verify that the modifying process is currently active and running.
---
--- Note that the application once invoked, will continue to execute as a daemon.
+-- Transmit handles the send portion of the protocol. It will send 10 frames, each of 518 bytes and wait for
+-- an acknowledgment. It uses CRC 32 for error detection.
 ----------------------------------------------------------------------------------------------------------------------*/#include "Header.h"
 #include "Main.h"
 #include "Receive.h"
@@ -49,28 +40,26 @@ bool rviSent = false;
 bool eof = false;
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: prepareToSend
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS: 
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Haley Booker
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: void prepareToSend(char *outputBuffer, HANDLE port)
+-- char *outputBuffer: the buffer to the file uploaded by the users
+-- HANDLE port: the handle to the comm port
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: void
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function checks if this is the first time transmitting and sets the pointer. It makes the
+-- decision to send the control frame or the data frame based on how many frames have been sent, if
+-- the end of the file has been reached, or if the recieving user sent an RVI.
 ----------------------------------------------------------------------------------------------------------------------*/
 void prepareToSend(char *outputBuffer, HANDLE port)
 {
@@ -112,28 +101,25 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: addData
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS: 
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Haley Booker, Anthony Vu
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: void addData()
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: void
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function is used to add data to a data frame. It will not be called if the program is sending a
+-- control frame. The function checks if the end of the file has been reached and will pad with nulls and
+-- set the end of file variable to true. After data has been added, the CRC will be calculated based on
+-- the data.
 ----------------------------------------------------------------------------------------------------------------------*/
 void addData()
 {
@@ -169,28 +155,27 @@ void addData()
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: send
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017 
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS:
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Haley Booker
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: void send(HANDLE port)
+-- HANDLE port: the handle to the comm port
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: void
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function handles the recieved frame after data has been written to the comm port.
+-- It uses variables set in prepare to send to determine if it sending a control frame or
+-- a data frame. It will either timeout or wait for a response from the recieving side. It
+-- can recieve an ACK or an RVI(BEL). If it timesout the retransmit count will increase.
+-- After 3 retransmissions the program will return to idle.
 ----------------------------------------------------------------------------------------------------------------------*/
 void send(HANDLE port)
 {
@@ -245,28 +230,24 @@ void send(HANDLE port)
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: addCRC
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS:
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Anthony Vu
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: VOID addCRC(char* data, unsigned char* crc)
+-- char* data: the data frame with the header and data
+-- unsigned char* crc: the 4 byte CRC that was generated
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: void
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function takes a data frame and CRC and appends the CRC to the data frame.
 ----------------------------------------------------------------------------------------------------------------------*/
 VOID addCRC(char* data, unsigned char* crc)
 {
