@@ -95,7 +95,7 @@ void printStaticInfo()
 /*
 updateInfo() header here
 */
-void updateInfo()
+void updateInfo(size_t counter)
 {
 	HDC hdc = GetDC(hwnd);
 	RECT rect;
@@ -105,18 +105,35 @@ void updateInfo()
 	rect.bottom = windowHeight - yOffset;
 	HRGN region = CreateRectRgn(rect.left, rect.top, rect.right, rect.bottom);
 
+	counter++;
+
+	char text[2];
+	
 	RedrawWindow(hwnd, &rect, region, RDW_INTERNALPAINT);
+
 	//Packet data: sent/rec
-	TextOut(hdc, xPcktData, yPckt, std::to_string(numPacketsSent).std::string::c_str(), strlen(std::to_string(numPacketsSent).std::string::c_str()));
-	TextOut(hdc, xPcktData, yPckt + yOffset, std::to_string(numPacketsReceived).std::string::c_str(), strlen(std::to_string(numPacketsReceived).std::string::c_str()));
+	_itoa_s(numPacketsSent, text, 2, 10);
+	TextOut(hdc, xPcktData, yPckt, text, strlen(text));
+	_itoa_s(numPacketsReceived, text, 2, 10);
+	TextOut(hdc, xPcktData, yPckt + yOffset, text, strlen(text));
+
 	//Bit error data
-	TextOut(hdc, xBitErrorData, yBitError, std::to_string(numBitErrors).std::string::c_str(), strlen(std::to_string(numBitErrors).std::string::c_str())) ;
+	_itoa_s(numBitErrors, text, 2, 10);
+	TextOut(hdc, xBitErrorData, yBitError, text, strlen(text)) ;
+
 	//ACK data: sent/rec
-	TextOut(hdc, xACKData, yACK, std::to_string(numACKSent).std::string::c_str(), strlen(std::to_string(numACKSent).std::string::c_str()));
-	TextOut(hdc, xACKData, yACK + yOffset, std::to_string(numACKReceived).std::string::c_str(), strlen(std::to_string(numACKReceived).std::string::c_str()));
+	_itoa_s(numACKSent, text, 2, 10);
+	TextOut(hdc, xACKData, yACK, text, strlen(text));
+	_itoa_s(numACKReceived, text, 2, 10);
+	TextOut(hdc, xACKData, yACK + yOffset, text, strlen(text));
+
 	//ENQ data: sent/rec
-	TextOut(hdc, xENQData, yENQ, std::to_string(numENQSent).std::string::c_str(), strlen(std::to_string(numENQSent).std::string::c_str()));
-	TextOut(hdc, xENQData, yENQ + yOffset, std::to_string(numENQReceived).std::string::c_str(), strlen(std::to_string(numENQReceived).std::string::c_str()));
+	_itoa_s(numENQSent, text, 2, 10);
+	TextOut(hdc, xENQData, yENQ, text, strlen(text));
+	_itoa_s(numENQReceived, text, 2, 10);
+	TextOut(hdc, xENQData, yENQ + yOffset, text, strlen(text));
+
 	//Timeout data
-	TextOut(hdc, xTOData, yTO, std::to_string(numTimeouts).std::string::c_str(), strlen(std::to_string(numTimeouts).std::string::c_str()));
+	_itoa_s(numTimeouts, text, 2, 10);
+	TextOut(hdc, xTOData, yTO, text, strlen(text));
 }
