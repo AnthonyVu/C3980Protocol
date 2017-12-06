@@ -43,7 +43,7 @@ VOID startTimer(unsigned int time);
 VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
 VOID Idle();
 VOID Acknowledge();
-BOOL Validation(uint32_t receivedCRC, char input[]);
+BOOL Validation(uint32_t receivedCRC, char* input);
 void bidForLine();
 void sendEnq();
 DWORD readThread(LPDWORD);
@@ -92,20 +92,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	Wcl.lpszMenuName = "commandMenu";
 	Wcl.cbClsExtra = 0;
 	Wcl.cbWndExtra = 0;
-
-	char hello[10] = "hello";
-	char bye[] = "bye";
-	uint32_t test = CRC::Calculate(hello, strlen(hello), CRC::CRC_32());
-	bool passed = Validation(test, hello);
-	unsigned char bytes[4];
-	unsigned long n = test;
-
-	bytes[0] = (n >> 24) & 0xFF;
-	bytes[1] = (n >> 16) & 0xFF;
-	bytes[2] = (n >> 8) & 0xFF;
-	bytes[3] = n & 0xFF;
-	addCRC(hello, bytes);
-
 	if (!RegisterClassEx(&Wcl))
 		return 0;
 
@@ -310,7 +296,7 @@ VOID Idle()
 		else if (strlen(inputFileBuffer) > 0)
 		{
 			/*
-			uint32_t test = addCRC(inputFileBuffer);
+			uint32_t test = CRC::Calculate(inputFileBuffer, st, CRC::CRC_32());
 			bool passed = Validation(test, inputFileBuffer);
 			unsigned char bytes[4];
 			unsigned long n = test;
@@ -338,10 +324,25 @@ VOID Acknowledge()
 }
 
 
-BOOL Validation(uint32_t receivedCRC, char* input)
+BOOL Validation(char* input)
 {
-	uint32_t crc = CRC::Calculate(input, strlen(input), CRC::CRC_32());
-	return crc == receivedCRC;
+	char temp[512];
+	unsigned char bytes[4];
+	memcpy(temp, &input[2], sizeof(int) * 512);
+	uint32_t crc = CRC::Calculate(temp, strlen(temp), CRC::CRC_32());
+	unsigned long shift = crc;
+	bytes[0] = (shift >> 24) & 0xFF;
+	bytes[1] = (shift >> 16) & 0xFF;
+	bytes[2] = (shift >> 8) & 0xFF;
+	bytes[3] = shift & 0xFF;
+	for (int i = 0, j = 514; i < 4; i++, j++)
+	{
+		if (bytes[i] != temp[j])
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 VOID sendEnq()

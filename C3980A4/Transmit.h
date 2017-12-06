@@ -5,7 +5,7 @@
 void prepareToSend(char *outputBuffer, HANDLE hComm);
 void addData();
 void send(HANDLE hComm);
-void addCRC(char*, unsigned char*);
+void addCRC(char*, unsigned char* );
 void printT();
 
 extern bool sentCtrl;

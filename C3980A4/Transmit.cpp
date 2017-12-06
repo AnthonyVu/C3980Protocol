@@ -37,15 +37,6 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 			line[0] = 22;
 			line[1] = 2;
 			addData();
-			uint32_t crc = CRC::Calculate(line, strlen(line), CRC::CRC_32());
-			unsigned char bytes[4];
-			unsigned long n = crc;
-
-			bytes[0] = (n >> 24) & 0xFF;
-			bytes[1] = (n >> 16) & 0xFF;
-			bytes[2] = (n >> 8) & 0xFF;
-			bytes[3] = n & 0xFF;
-			addCRC(line, bytes);
 		}
 		send(port);
 	}
@@ -53,10 +44,13 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 
 void addData()
 {
+	char temp[512];
 	size_t n = 0;
 	int c;
 	int count = 2;
 	bool eof = false;
+	unsigned char bytes[4];
+
 	while (count != 514)
 	{
 		if (eof == false && *filePtr != EOF)
@@ -72,6 +66,15 @@ void addData()
 		}
 		count++;
 	}
+
+	memcpy(temp, &line[2], sizeof(int) * 512);
+	uint32_t crc = CRC::Calculate(temp, strlen(temp), CRC::CRC_32());
+	unsigned long shift = crc;
+	bytes[0] = (shift >> 24) & 0xFF;
+	bytes[1] = (shift >> 16) & 0xFF;
+	bytes[2] = (shift >> 8) & 0xFF;
+	bytes[3] = shift & 0xFF;
+	addCRC(line, bytes);
 }
 
 void send(HANDLE port)
@@ -121,10 +124,11 @@ void send(HANDLE port)
 
 VOID addCRC(char* data, unsigned char* crc)
 {
-	data[sizeof(data) - 3] = crc[0];
-	data[sizeof(data) - 2] = crc[1];
-	data[sizeof(data) - 1] = crc[2];
-	data[sizeof(data)] = crc[3];
+	int count = strlen(data);
+	data[count] = crc[0];
+	data[count + 1] = crc[1];
+	data[count + 2] = crc[2];
+	data[count + 3] = crc[3];
 }
 
 

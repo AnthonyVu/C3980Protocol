@@ -1,6 +1,7 @@
 #pragma once
 #define STRICT
 #include <Windows.h>
+#include <stdint.h>
 
 #define IDT_TIMER1				101
 #define IDT_TIMER2				102
@@ -23,3 +24,4 @@ extern char inputBuffer[];
 
 VOID startTimer(unsigned int time);
 BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite);
+BOOL Validation(uint32_t receivedCRC, char* input);
