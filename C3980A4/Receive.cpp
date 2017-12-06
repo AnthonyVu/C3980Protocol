@@ -61,7 +61,9 @@ bool Validation(char* input)
 	bytes[3] = shift & 0xFF;
 	for (int i = 0, j = 514; i < 4; i++, j++)
 	{
-		if (bytes[i] != temp[j])
+		char a = bytes[i];
+		char b = input[j];
+		if (a != b)
 		{
 			return false;
 		}
