@@ -2,7 +2,7 @@
 -- SOURCE FILE: Transmit.cpp - Handles the sending responsibilities of
 --							the protocol
 --
--- PROGRAM: c3980A4
+-- PROGRAM: C3980A4
 --
 -- FUNCTIONS:
 -- void prepareToSend(char *outputBuffer, HANDLE port)
