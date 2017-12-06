@@ -82,6 +82,7 @@ void bidForLine();
 void sendEnq();
 DWORD readThread(LPDWORD);
 BOOL writeToPort(char*, DWORD);
+VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped);
 
 //bool values used to keep track of timeouts
 extern bool timeout = false;
