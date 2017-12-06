@@ -9,10 +9,12 @@ void Receive() {
 	startTimer(2000);
 	memset(inputBuffer, 0, 518);
 	while (!timeout) {
-		if (inputBuffer[0] == 22) {
+		if (inputBuffer[0] == SYN)//22 
+		{
 
 			//EOT
-			if (inputBuffer[1] == 4) {
+			if (inputBuffer[1] == EOT)//4 
+			{
 				memset(inputBuffer, 0, 518);
 				KillTimer(hwnd, TIMER_TEST);
 				return;
@@ -29,7 +31,8 @@ void Receive() {
 				return;
 				//STX
 			}
-			else if (inputBuffer[1] == 2) {
+			else if (inputBuffer[1] == STX)//2 
+			{
 				//call validation on inpuBuffer
 				if (Validation(inputBuffer)) {
 

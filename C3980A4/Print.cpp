@@ -25,7 +25,7 @@ void print() {
 
 	GetWindowRect(hwnd, &rect);
 	currentWindowWidth = rect.right - rect.left;
-
+	 
 
 	int nullCount = 0;
 	char buff[2];
@@ -112,28 +112,28 @@ void updateInfo(size_t* counter)
 	RedrawWindow(hwnd, &rect, region, RDW_INTERNALPAINT);
 
 	//Packet data: sent/rec
-	_itoa_s(numPacketsSent, text, 2, 10);
+	_itoa_s(numPacketsSent, text, 4, 10);
 	TextOut(hdc, xPcktData, yPckt, text, strlen(text));
-	_itoa_s(numPacketsReceived, text, 2, 10);
+	_itoa_s(numPacketsReceived, text, 4, 10);
 	TextOut(hdc, xPcktData, yPckt + yOffset, text, strlen(text));
 
 	//Bit error data
-	_itoa_s(numBitErrors, text, 2, 10);
+	_itoa_s(numBitErrors, text, 4, 10);
 	TextOut(hdc, xBitErrorData, yBitError, text, strlen(text)) ;
 
 	//ACK data: sent/rec
-	_itoa_s(numACKSent, text, 2, 10);
+	_itoa_s(numACKSent, text, 4, 10);
 	TextOut(hdc, xACKData, yACK, text, strlen(text));
-	_itoa_s(numACKReceived, text, 2, 10);
+	_itoa_s(numACKReceived, text, 4, 10);
 	TextOut(hdc, xACKData, yACK + yOffset, text, strlen(text));
 
 	//ENQ data: sent/rec
-	_itoa_s(numENQSent, text, 2, 10);
+	_itoa_s(numENQSent, text, 4, 10);
 	TextOut(hdc, xENQData, yENQ, text, strlen(text));
-	_itoa_s(numENQReceived, text, 2, 10);
+	_itoa_s(numENQReceived, text, 4, 10);
 	TextOut(hdc, xENQData, yENQ + yOffset, text, strlen(text));
 
 	//Timeout data
-	_itoa_s(numTimeouts, text, 2, 10);
+	_itoa_s(numTimeouts, text, 4, 10);
 	TextOut(hdc, xTOData, yTO, text, strlen(text));
 }
