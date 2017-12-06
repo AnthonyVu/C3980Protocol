@@ -30,6 +30,11 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 			control[0] = 22;
 			control[1] = 4;
 			sentCtrl = true;
+			if (eof)
+			{
+				filePtr = NULL;
+				outputBuffer = NULL;
+			}
 		}
 		else
 		{
@@ -47,11 +52,6 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 			rviSent = false;
 			return;
 		}
-	}
-	if (eof)
-	{
-		filePtr = NULL;
-		outputBuffer = NULL;
 	}
 }
 
@@ -111,10 +111,6 @@ void send(HANDLE port)
 
 			while (timeout == false)
 			{
-				if (eof)
-				{
-					eot = true;
-				}
 				if (inputBuffer[0] == 22)
 				{
 					if (inputBuffer[1] == 6)
@@ -122,6 +118,10 @@ void send(HANDLE port)
 						sent++;
 						//printT();
 						memset(inputBuffer, 0, 518);
+						if (eof)
+						{
+							eot = true;
+						}
 						return;
 					}
 					if (inputBuffer[1] == 7)
