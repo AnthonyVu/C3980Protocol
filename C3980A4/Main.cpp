@@ -121,7 +121,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 		return FALSE;
 	}
 
-	connectMode = true;
+	//connectMode = true;
 
 	ct.ReadIntervalTimeout = 500;
 	ct.ReadTotalTimeoutMultiplier = 500;

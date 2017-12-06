@@ -55,7 +55,7 @@ void addData()
 	int c;
 	int count = 2;
 	bool eof = false;
-	unsigned char bytes[4];
+	unsigned char bytes[4] = {0};
 
 	while (count != 514)
 	{
@@ -73,7 +73,7 @@ void addData()
 		count++;
 	}
 
-	memcpy(temp, &line[2], sizeof(int) * 512);
+	memcpy(temp, &line[2], sizeof(char) * 512);
 	uint32_t crc = CRC::Calculate(temp, strlen(temp), CRC::CRC_32());
 	unsigned long shift = crc;
 	bytes[0] = (shift >> 24) & 0xFF;
@@ -131,7 +131,7 @@ void send(HANDLE port)
 
 VOID addCRC(char* data, unsigned char* crc)
 {
-	int count = strlen(data);
+	int count = 514;
 	data[count] = crc[0];
 	data[count + 1] = crc[1];
 	data[count + 2] = crc[2];
@@ -161,7 +161,7 @@ void printT() {
 	//strncpy_s(temp, inputBuffer, sizeof(temp));
 
 
-	for (int i = 2; i < 514; i++) {
+	for (int i = 2; i < 518; i++) {
 		if (line[i] == NULL) {
 			nullCount++;
 		}
