@@ -250,6 +250,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					//DisplayError(TEXT("ReadFile"));
 					MessageBox(hwnd, inputFileBuffer, "", NULL);
 				}
+				CloseHandle(fileHandle);
 			}
 			break;
 		}
