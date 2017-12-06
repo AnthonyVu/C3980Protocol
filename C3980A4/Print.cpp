@@ -22,10 +22,8 @@ void print() {
 	GetWindowRect(hwnd, &rect);
 	currentWindowWidth = rect.right - rect.left;
 
-
 	int nullCount = 0;
 	char buff[2];
-	
 
 	for (int i = 2; i < 514; i++) {
 		if (inputBuffer[i] == NULL) {

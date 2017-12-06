@@ -55,7 +55,6 @@ extern bool linkedReset = false;
 char inputBuffer[518] = {0};
 
 
-
 //bool timeout;
 //char* inputBuffer;
 
