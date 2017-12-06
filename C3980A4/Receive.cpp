@@ -65,6 +65,7 @@ bool Validation(char* input)
 		char b = input[j];
 		if (a != b)
 		{
+			updateInfo(&numBitErrors);
 			return false;
 		}
 	}
