@@ -273,12 +273,12 @@ VOID Idle()
 	{
 		if (linkedReset != false)
 		{
-			startTimer(10000);
+			startTimer(5000);
 			while (!timeout)
 			{
 				//MessageBox(hwnd, "idle", "", MB_OK);
 
-				if (inputBuffer[0] == 22 && inputBuffer[1] == 5 && strlen(inputBuffer) > 0)
+				if (inputBuffer[0] == 22 && inputBuffer[1] == 5)
 				{
 					Acknowledge();
 					break;
@@ -345,7 +345,7 @@ VOID sendEnq()
 VOID bidForLine()
 {
 	//MessageBox(hwnd, "Calling bidForLine()", "", NULL);
-	startTimer(5000);
+	startTimer(2000);
 	while (timeout != true)
 	{
 		//MessageBox(hwnd, "bid", "", MB_OK);
@@ -356,6 +356,7 @@ VOID bidForLine()
 			eot = false;
 			memset(inputBuffer, 0, 518);
 			timeout = true;
+			KillTimer(hwnd, TIMER_TEST);
 		}
 	}
 	linkedReset = true;
