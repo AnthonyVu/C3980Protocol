@@ -12,6 +12,7 @@ extern bool eot = false;
 extern char control[2] = { 0 };
 extern char line[518] = { 0 };
 extern char * filePtr = NULL;
+bool rviSent = false;
 
 void prepareToSend(char *outputBuffer, HANDLE port)
 {
@@ -40,6 +41,11 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 			addCRC();
 		}
 		send(port);
+		if (rviSent)
+		{
+			rviSent = false;
+			return;
+		}
 	}
 }
 
@@ -98,8 +104,9 @@ void send(HANDLE port)
 						memset(inputBuffer, 0, 518);
 						return;
 					}
-					if (inputBuffer[1] == 21)
+					if (inputBuffer[1] == 7)
 					{
+						rviSent = true;
 						return;
 					}
 				}
