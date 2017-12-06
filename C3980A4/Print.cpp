@@ -44,6 +44,11 @@ void print() {
 					printColumn = 0;
 					printRow += charHeight;
 				}
+				if (printRow >= rect.bottom - 25) {
+					InvalidateRect(hwnd, &rect, TRUE);
+					printRow = 0;
+					printColumn = 0;
+				}
 				TextOut(dc, printColumn, printRow, buff, sizeof(buff));
 				printColumn += length.cx;
 				nullCount--;
@@ -51,6 +56,11 @@ void print() {
 			if (printColumn > yDataEnd - 25) {
 				printColumn = 0;
 				printRow += charHeight;
+			}
+			if (printRow >= rect.bottom - 25) {
+				InvalidateRect(hwnd, &rect, TRUE);
+				printRow = 0;
+				printColumn = 0;
 			}
 			sprintf_s(buff, "%c", inputBuffer[i]);
 			GetTextExtentPoint32(dc, buff, 1, &length);
