@@ -8,6 +8,8 @@
 #define yDataEnd			880
 
 //Coordinates to display current state
+#define xState				975
+#define yState				25
 
 //Coordinates to display Num. Packets Sent
 #define	xPckt				950
@@ -35,4 +37,5 @@
 void print();
 void printStaticInfo();
 void updateInfo(size_t*);
+void updateConnectionStatus();
 

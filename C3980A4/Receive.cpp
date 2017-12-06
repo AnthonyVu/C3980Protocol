@@ -110,7 +110,7 @@ void Receive() {
 -- RETURNS: bool - whether the input data was valid or not
 --
 -- NOTES:
--- This function calculates the CRC of the data frame and compares the caluclated CRC with the CRC that was sent with the data frame. 
+-- This function calculates the CRC of the data frame and compares the calculated CRC with the CRC that was sent with the data frame. 
 -- If the calculated CRC is the same as the CRC that was sent with the data frame then the data was valid and the function will return true. Otherwise 
 -- function return false. 
 ----------------------------------------------------------------------------------------------------------------------*/

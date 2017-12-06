@@ -33,6 +33,7 @@ extern bool linkedReset;
 extern char inputBuffer[];
 extern bool rvi;
 extern char inputFileBuffer[MAX_FILE_SIZE];
+extern bool connectMode;
 
 extern size_t numPacketsSent;
 extern size_t numPacketsReceived;

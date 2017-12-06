@@ -66,6 +66,7 @@ void print() {
 	currentWindowWidth = rect.right - rect.left;
 	int nullCount = 0;
 	char buff[2];
+
 	for (int i = 2; i < 514; i++) {
 		if (inputBuffer[i] == NULL) {
 			nullCount++;
@@ -79,8 +80,8 @@ void print() {
 					printColumn = 0;
 					printRow += charHeight;
 				}
-				if (printRow >= rect.bottom - 25) {
-					InvalidateRect(hwnd, &rect, TRUE);
+				if (printRow >= textRect.bottom - 25) {
+					InvalidateRect(hwnd, &textRect, TRUE);
 					printRow = 0;
 					printColumn = 0;
 				}
@@ -91,12 +92,12 @@ void print() {
 			if (printColumn > yDataEnd - 25) {
 				printColumn = 0;
 				printRow += charHeight;
-				InvalidateRect(hwnd, &textRect, TRUE);
 			}
 			if (printRow >= rect.bottom - 25) {
-				InvalidateRect(hwnd, &rect, TRUE);
+				
 				printRow = 0;
 				printColumn = 0;
+				InvalidateRect(hwnd, &textRect, TRUE);
 			}
 			sprintf_s(buff, "%c", inputBuffer[i]);
 			GetTextExtentPoint32(dc, buff, 1, &length);
@@ -129,6 +130,7 @@ void printStaticInfo()
 {
 	HDC hdc = GetDC(hwnd);
 
+	char connectionState[] = "Disconnected";
 	char numPacketSentText[] = "Packets transferred:";
 	char numPacketReceivedText[] = "Packets received:";
 	char numErrorText[] = "Num. Bit Errors:";
@@ -139,6 +141,8 @@ void printStaticInfo()
 	char numTOText[] = "Num. Timeouts occurred:";
 
 	//Prints static portion of info frame
+	TextOut(hdc, xState, yState, connectionState, strlen(connectionState));
+
 	TextOut(hdc, xPckt, yPckt, numPacketSentText, strlen(numPacketSentText));
 	TextOut(hdc, xPckt, yPckt + yOffset, numPacketReceivedText, strlen(numPacketReceivedText));
 
@@ -184,33 +188,70 @@ void updateInfo(size_t* counter)
 
 	(*counter)++;
 
-	char text[4];
+	char text[5];
 	
 	RedrawWindow(hwnd, &rect, region, RDW_INTERNALPAINT);
 
 	//Packet data: sent/rec
-	_itoa_s(numPacketsSent, text, 4, 10);
+	_itoa_s(numPacketsSent, text, 5, 10);
 	TextOut(hdc, xPcktData, yPckt, text, strlen(text));
-	_itoa_s(numPacketsReceived, text, 4, 10);
+	_itoa_s(numPacketsReceived, text, 5, 10);
 	TextOut(hdc, xPcktData, yPckt + yOffset, text, strlen(text));
 
 	//Bit error data
-	_itoa_s(numBitErrors, text, 4, 10);
+	_itoa_s(numBitErrors, text, 5, 10);
 	TextOut(hdc, xBitErrorData, yBitError, text, strlen(text)) ;
 
 	//ACK data: sent/rec
-	_itoa_s(numACKSent, text, 4, 10);
+	_itoa_s(numACKSent, text, 5, 10);
 	TextOut(hdc, xACKData, yACK, text, strlen(text));
-	_itoa_s(numACKReceived, text, 4, 10);
+	_itoa_s(numACKReceived, text, 5, 10);
 	TextOut(hdc, xACKData, yACK + yOffset, text, strlen(text));
 
 	//ENQ data: sent/rec
-	_itoa_s(numENQSent, text, 4, 10);
+	_itoa_s(numENQSent, text, 5, 10);
 	TextOut(hdc, xENQData, yENQ, text, strlen(text));
-	_itoa_s(numENQReceived, text, 4, 10);
+	_itoa_s(numENQReceived, text, 5, 10);
 	TextOut(hdc, xENQData, yENQ + yOffset, text, strlen(text));
 
 	//Timeout data
-	_itoa_s(numTimeouts, text, 4, 10);
+	_itoa_s(numTimeouts, text, 5, 10);
 	TextOut(hdc, xTOData, yTO, text, strlen(text));
+}
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: updateConnectionStatus
+--
+-- DATE: December 3, 2017
+--
+-- REVISIONS: None
+--
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
+--
+-- PROGRAMMER: Wilson Hu
+--
+-- INTERFACE: void updateConnection()
+--
+-- RETURNS: void
+--
+-- NOTES:
+-- This function is used to update the connection status on the screen for the user.
+----------------------------------------------------------------------------------------------------------------------*/
+void updateConnectionStatus()
+{
+	if (connectMode)
+	{
+		HDC hdc = GetDC(hwnd);
+		RECT rect;
+		rect.top = yState - 5;
+		rect.left = xState - 5;
+		rect.right = xState + 30;
+		rect.bottom = yState + yOffset;
+		HRGN region = CreateRectRgn(rect.left, rect.top, rect.right, rect.bottom);
+		char connectionStatus[] = "---Connected---";
+
+		bool a = RedrawWindow(hwnd, &rect, region, RDW_INTERNALPAINT);
+
+		TextOut(hdc, xState, yState, connectionStatus, strlen(connectionStatus));
+	}
 }

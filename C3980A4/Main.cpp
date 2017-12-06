@@ -66,7 +66,7 @@ HANDLE idleThread;
 HANDLE readInputBufferThread;
 
 
-boolean connectMode = false;
+bool connectMode = false;
 
 int printRow = 0;
 int printColumn = 0;
@@ -180,6 +180,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 		//return FALSE;
 	}
 
+	//Sets COMSTAT fields
 	ct.ReadIntervalTimeout = 500;
 	ct.ReadTotalTimeoutMultiplier = 500;
 	ct.ReadTotalTimeoutConstant = 500;
@@ -265,6 +266,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		case (MENU_CONNECT):
 			if (!connectMode) {
 				connectMode = true;
+				updateConnectionStatus();
 
 				if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
 					/* handle error */
@@ -317,7 +319,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_DESTROY:
-
 		PostQuitMessage(0);
 		break;
 	default:
@@ -709,6 +710,7 @@ BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 					result = FALSE;
 				else
 					result = TRUE;
+				updateInfo(&numPacketsSent);
 				break;
 			default:
 				result = FALSE;
