@@ -53,7 +53,7 @@ bool Validation(char* input)
 	char temp[512];
 	unsigned char bytes[4];
 	memcpy(temp, &input[2], sizeof(char) * 512);
-	uint32_t crc = CRC::Calculate(temp, strlen(temp), CRC::CRC_32());
+	uint32_t crc = CRC::Calculate(temp, 512, CRC::CRC_32());
 	unsigned long shift = crc;
 	bytes[0] = (shift >> 24) & 0xFF;
 	bytes[1] = (shift >> 16) & 0xFF;
@@ -61,7 +61,9 @@ bool Validation(char* input)
 	bytes[3] = shift & 0xFF;
 	for (int i = 0, j = 514; i < 4; i++, j++)
 	{
-		if (bytes[i] != temp[j])
+		char a = bytes[i];
+		char b = input[j];
+		if (a != b)
 		{
 			return false;
 		}
