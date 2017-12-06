@@ -5,23 +5,26 @@
 
 void Receive() {
 	DWORD bitsWritten;
-	//char recieveBuffer[518];
+	char receiveBuffer[518];
+	//char * currIndex = receiveBuffer;
 	//memset(recieveBuffer, 0, 518);
-	startTimer();
+	startTimer(5000);
 	//start timer thread
 	memset(inputBuffer, 0, 518);
-	int messagesRecieved = 0;
-	while (!timeout && messagesRecieved != 10) {
+	//int messagesRecieved = 0;
+	while (!timeout) {
 		if (inputBuffer[0] == 22) {
 			 
 			//eot
 			if (inputBuffer[1] == 4) {
+				memset(inputBuffer, 0, 518);
+				KillTimer(hwnd, TIMER_TEST);
 				return;
-			} else if (inputBuffer[1] == 'R') { //?undetermined
+			} else if (inputBuffer[1] == 7) { //RVI
 				char rvi[2];
 				rvi[0] = 22;
 				//rvi[1] = (char) ? ;
-				WriteFile(port, rvi, sizeof(rvi), &bitsWritten, NULL);
+				writeToPort(rvi, sizeof(rvi));
 				return;
 
 			}
@@ -31,12 +34,20 @@ void Receive() {
 					char ack[2];
 					ack[0] = 22;
 					ack[1] = 6;
-					WriteFile(port, ack, sizeof(ack), &bitsWritten, NULL);
-					KillTimer(hwnd, TIMER_TEST);
-					startTimer();
-					print();
-					memset(inputBuffer, 0, 518);
-					messagesRecieved++;
+					//memmove(inputBuffer, currIndex, strlen(inputBuffer));
+					//currIndex = currIndex + strlen(inputBuffer);
+					//if (strlen(receiveBuffer) == 518) {
+						print();
+						KillTimer(hwnd, TIMER_TEST);
+						//WriteFile(port, ack, sizeof(ack), &bitsWritten, NULL);
+						bool bwrite = writeToPort(ack, 2);
+						startTimer(5000);
+						memset(inputBuffer, 0, 518);
+						memset(receiveBuffer, 0, 518);
+					//	messagesRecieved++;
+						//currIndex = receiveBuffer;
+					//}
+					
 				//}
 				
 			

@@ -128,9 +128,6 @@
   <ItemGroup>
     <ResourceCompile Include="..\commandMenu.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <Text Include="test1.txt" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

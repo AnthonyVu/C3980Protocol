@@ -38,13 +38,14 @@ int printColumn = 0;
 //Function Headers
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
-VOID startTimer();
+VOID startTimer(unsigned int time);
 VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
 VOID Idle();
 VOID Acknowledge();
 void bidForLine();
 void sendEnq();
 DWORD readThread(LPDWORD);
+BOOL writeToPort(char*, DWORD);
 
 
 extern bool timeout = false;
@@ -112,7 +113,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	UpdateWindow(hwnd);
 
 	if ((port = CreateFile("com1", GENERIC_READ | GENERIC_WRITE, 0,
-		NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
+		NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL))
 		== INVALID_HANDLE_VALUE)
 	{
 		MessageBox(NULL, "Error opening COM port:", "", MB_OK);
@@ -121,8 +122,12 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 
 	connectMode = true;
 
-	ct.ReadIntervalTimeout = MAXDWORD;
-	//SetCommTimeouts(port, &ct);
+	ct.ReadIntervalTimeout = 500;
+	ct.ReadTotalTimeoutMultiplier = 500;
+	ct.ReadTotalTimeoutConstant = 500;
+	ct.WriteTotalTimeoutMultiplier = 500;
+	ct.WriteTotalTimeoutConstant = 500;
+	SetCommTimeouts(port, &ct);
 
 	//setup device context settings
 	if (!SetupComm(port, 8, 8)) { //is it supposed to be 8?
@@ -161,16 +166,16 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 
 
 
-VOID startTimer()
+VOID startTimer(unsigned int time)
 {
 	timeout = false;
-	SetTimer(hwnd, TIMER_TEST, TEST_TIMEOUT, TimerProc);
+	SetTimer(hwnd, TIMER_TEST, time, TimerProc);
 }
 
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 	timeout = true;
 	KillTimer(hwnd, TIMER_TEST);
-	MessageBox(hwnd, "Timed out.", "", NULL);
+	//MessageBox(hwnd, "Timed out.", "", NULL);
 }
 
 VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped)
@@ -186,9 +191,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	HDC hdc;
 	PAINTSTRUCT paintstruct;
 	DWORD threadId; //unused?
-
-	
-
 
 	//File Input variables
 	DWORD dwBytesRead = 0;
@@ -268,15 +270,18 @@ VOID Idle()
 {
 	while (true)
 	{
-		if (/*linkedReset*/ false)
+		if (linkedReset != false)
 		{
-			startTimer();
+			startTimer(10000);
 			while (!timeout)
 			{
 				//MessageBox(hwnd, "idle", "", MB_OK);
-				if (inputBuffer != NULL && inputBuffer[1] == 5)
+
+				if (inputBuffer[0] == 22 && inputBuffer[1] == 5 && strlen(inputBuffer) > 0)
 				{
 					Acknowledge();
+					break;
+					//memset(inputBuffer, 0, 518);
 				}
 				if (timeout)
 				{
@@ -284,14 +289,10 @@ VOID Idle()
 				}
 			}
 		}
-		if (inputBuffer[0] == 22 && strlen(inputBuffer) > 0)
+		if (inputBuffer[0] == 22 && inputBuffer[1] == 5 && strlen(inputBuffer) > 0)
 		{
-	
-			if (inputBuffer[1] == 5)
-			{
 				Acknowledge();
-				break;
-			}
+				//memset(inputBuffer, 0, 518);
 		}
 		else if (strlen(inputFileBuffer) > 0)
 		{
@@ -307,7 +308,8 @@ VOID Acknowledge()
 	DWORD bytesWritten;
 	control[0] = 22;
 	control[1] = 6;
-	WriteFile(port, control, sizeof(control), &bytesWritten, NULL);
+	bool write = writeToPort(control, 2);
+	//WriteFile(port, control, sizeof(control), &bytesWritten, NULL);
 	Receive();
 }
 
@@ -318,8 +320,9 @@ VOID sendEnq()
 	enq[0] = 22;
 	enq[1] = 5;
 	//PurgeComm(port, PURGE_RXCLEAR);
-	bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
-	if (!bwrite) {
+	bool write = writeToPort(enq, 2);
+	//bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
+	if (!write) {
 		MessageBox(hwnd, "i suck  at writefile", "", MB_OK);
 	}
 	//PurgeComm(port, PURGE_RXCLEAR);
@@ -327,8 +330,8 @@ VOID sendEnq()
 
 VOID bidForLine()
 {
-	MessageBox(hwnd, "Calling bidForLine()", "", NULL);
-	startTimer();
+	//MessageBox(hwnd, "Calling bidForLine()", "", NULL);
+	startTimer(5000);
 	while (timeout != true)
 	{
 		//MessageBox(hwnd, "bid", "", MB_OK);
@@ -336,6 +339,8 @@ VOID bidForLine()
 		{
 			memset(inputBuffer, 0, 518);
 			prepareToSend(inputFileBuffer, port);
+			eot = false;
+			memset(inputBuffer, 0, 518);
 			timeout = true;
 		}
 	}
@@ -349,6 +354,7 @@ DWORD readThread(LPDWORD lpdwParam1)
 	DWORD nBytesRead = 0;
 	DWORD dwEvent, dwError;
 	COMSTAT cs;
+	OVERLAPPED osReader = { 0 };
 	char a[10];
 
 	SetCommMask(port, EV_RXCHAR);
@@ -357,11 +363,19 @@ DWORD readThread(LPDWORD lpdwParam1)
 	while (connectMode) {
 		if (WaitCommEvent(port, &dwEvent, NULL))
 		{
-			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
+			//MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
 			ClearCommError(port, &dwError, &cs);
+
+			osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+			if (osReader.hEvent == NULL)
+			{
+				MessageBox(hwnd, "I COULD NOT CREATE HEVENT MASTER", "", NULL);
+				return 0;
+			}
+
 			if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
 			{
-				if (!ReadFile(port, inputBuffer, sizeof(inputBuffer), &nBytesRead, NULL)) //need receive buffer to be extern to access
+				if (!ReadFile(port, inputBuffer, sizeof(inputBuffer), &nBytesRead, &osReader)) //need receive buffer to be extern to access
 				{
 					//error case, handle error here
 					int i = 0;
@@ -377,3 +391,55 @@ DWORD readThread(LPDWORD lpdwParam1)
 	}
 	return nBytesRead;
 }
+
+BOOL readFromBuffer()
+{
+	return FALSE;
+}
+
+BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
+{
+	OVERLAPPED osWrite = { 0 };
+	DWORD dwWritten;
+	DWORD dwRes;
+	BOOL result;
+
+	osWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	if (osWrite.hEvent == NULL)
+	{
+		return FALSE;
+	}
+
+	//Issue write
+	if (!WriteFile(port, writeBuffer, dwNumToWrite, &dwRes, &osWrite))
+	{
+
+		if (GetLastError() != ERROR_IO_PENDING)
+		{
+			result = FALSE;
+		}
+		else {
+			//Write is pending
+			dwRes = WaitForSingleObject(osWrite.hEvent, 2000);
+			switch (dwRes)
+			{
+			case WAIT_OBJECT_0:
+				if (!GetOverlappedResult(port, &osWrite, &dwWritten, FALSE))
+					result = FALSE;
+				else 
+					result = TRUE;
+				break;
+			default:
+				result = FALSE;
+				break;
+			}
+		}
+	}
+	else  //WriteFile succeeded
+	{
+		result = TRUE;
+	}
+	return result;
+}
+
+

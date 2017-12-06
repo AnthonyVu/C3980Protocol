@@ -5,6 +5,7 @@
 #include "Print.h"
 
 
+
 extern bool sentCtrl = false;
 extern int sent = 0;
 extern bool eot = false;
@@ -72,19 +73,20 @@ void send(HANDLE port)
 	while (retransmitCount < 3)
 	{
 		//KillTimer(hwnd, TIMER_TEST);
-		startTimer();
+		startTimer(5000);
 		timeout = false;
 		if (eot == true)
 		{
 			sent = 0;
-			bool bwrite = WriteFile(port, (LPCVOID)control, (DWORD)strlen(control), &dwBytesWritten, NULL);
+			bool bwrite = writeToPort(control, (DWORD)strlen(control));
 			return;
 			//send control frame
 		}
 		else
 		{
 			//send line frame
-			bool bwrite = WriteFile(port, (LPCVOID)line, (DWORD)strlen(line), &dwBytesWritten, NULL);
+			bool bwrite = writeToPort(line, strlen(line));
+			
 			while (timeout == false)
 			{
 				if (inputBuffer[0] == 22)
@@ -92,7 +94,8 @@ void send(HANDLE port)
 					if (inputBuffer[1] == 6)
 					{
 						sent++;
-						printT();
+						//printT();
+						memset(inputBuffer, 0, 518);
 						return;
 					}
 					if (inputBuffer[1] == 21)
