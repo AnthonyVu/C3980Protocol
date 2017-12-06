@@ -55,7 +55,7 @@ extern bool linkedReset = false;
 //FILE * outputBuffer = NULL;
 
 char inputBuffer[518] = { 0 };
-
+extern bool rvi = false;
 
 
 //bool timeout;
@@ -202,20 +202,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 			//Connect menu button pressed, should probably connect before setting connectMode=true
 		case (MENU_CONNECT):
+			if (!connectMode) {
+				connectMode = true;
 
-			if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
-				MessageBox(hwnd, "Could not create readinputbufferthread", "", NULL);
+				if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
+					/* handle error */
+					//return 0;
+					MessageBox(hwnd, "Could not create idleThread", "", NULL);
+				} /* end if (error creating read thread) */
+				if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
+				}
+				//if (ResumeThread(readInputBufferThread) == -1) {
+				//	MessageBox(hwnd, "could not resume readInputBufferThread, my lord", "", NULL);
+				//}
 			}
-			if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
-				/* handle error */
-				//return 0;
-				MessageBox(hwnd, "Could not create idleThread", "", NULL);
-			} /* end if (error creating read thread) */
-			/*
-			if (ResumeThread(readInputBufferThread) == -1) {
-				MessageBox(hwnd, "could not resume readInputBufferThread, my lord", "", NULL);
-			}
-			*/
 			break;
 			//Disconnect menu button pressed
 		case (MENU_DISCONNECT):
@@ -253,7 +253,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		hdc = BeginPaint(hwnd, &paintstruct);
 		break;
 	case WM_CHAR:
-		sendEnq();
+		switch (wParam) {
+		case 114:
+			rvi = true;
+			break;
+		}
 		break;
 	case WM_DESTROY:
 
