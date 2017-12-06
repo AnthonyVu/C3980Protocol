@@ -13,6 +13,8 @@ extern char control[2] = { 0 };
 extern char line[518] = { 0 };
 extern char * filePtr = NULL;
 bool rviSent = false;
+bool eof = false;
+
 
 void prepareToSend(char *outputBuffer, HANDLE port)
 {
@@ -46,20 +48,24 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 			return;
 		}
 	}
+	if (eof)
+	{
+		filePtr = NULL;
+		outputBuffer = NULL;
+	}
 }
 
 void addData()
 {
 	char temp[512];
 	size_t n = 0;
-	int c;
 	int count = 2;
-	bool eof = false;
+	eof = false;
 	unsigned char bytes[4] = {0};
 
 	while (count != 514)
 	{
-		if (eof == false && *filePtr != EOF)
+		if (eof == false && *filePtr != 0)
 		{
 			line[count] = *filePtr;
 			filePtr++;
@@ -67,8 +73,7 @@ void addData()
 		else
 		{
 			eof = true;
-			eot = true;
-			line[count] = '\0';
+			line[count] = 0;
 		}
 		count++;
 	}
@@ -80,7 +85,7 @@ void addData()
 	bytes[1] = (shift >> 16) & 0xFF;
 	bytes[2] = (shift >> 8) & 0xFF;
 	bytes[3] = shift & 0xFF;
-	addCRC(line, bytes);
+  	addCRC(line, bytes);
 }
 
 void send(HANDLE port)
@@ -102,11 +107,15 @@ void send(HANDLE port)
 		else
 		{
 			//send line frame
-			bool bwrite = writeToPort(line, strlen(line));
+			bool bwrite = writeToPort(line, 518);
 
 			while (timeout == false)
 			{
-				if (inputBuffer[0] == SYN)//22
+				if (eof)
+				{
+					eot = true;
+				}
+				if (inputBuffer[0] == 22)
 				{
 					if (inputBuffer[1] == ACK)//6
 					{
@@ -118,6 +127,7 @@ void send(HANDLE port)
 					if (inputBuffer[1] == BEL)//7
 					{
 						rviSent = true;
+						filePtr = filePtr - 512;
 						sent = 0;
 						return;
 					}
@@ -126,6 +136,7 @@ void send(HANDLE port)
 			retransmitCount++;
 		}
 	}
+	filePtr = filePtr - 512;
 	eot = true;
 	return;
 }

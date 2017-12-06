@@ -280,7 +280,7 @@ VOID Idle()
 	{
 		if (linkedReset != false)
 		{
-			startTimer(5000);
+			startTimer(2001);
 			while (!timeout)
 			{
 				//MessageBox(hwnd, "idle", "", MB_OK);
@@ -288,6 +288,7 @@ VOID Idle()
 				if (inputBuffer[0] == SYN && inputBuffer[1] == ENQ)
 				{
 					Acknowledge();
+					linkedReset = false;
 					break;
 					//memset(inputBuffer, 0, 518);
 				}
@@ -297,9 +298,11 @@ VOID Idle()
 				}
 			}
 		}
-		if (inputBuffer[0] == SYN && inputBuffer[1] == ENQ && strlen(inputBuffer) > 0)
+
+		if (inputBuffer[0] == SYN && inputBuffer[1] == ENQ)
 		{
 			Acknowledge();
+			linkedReset = false;
 			//memset(inputBuffer, 0, 518);
 		}
 		else if (strlen(inputFileBuffer) > 0)
@@ -363,6 +366,7 @@ VOID bidForLine()
 		{
 			memset(inputBuffer, 0, 518);
 			prepareToSend(inputFileBuffer, port);
+			linkedReset = true;
 			eot = false;
 			memset(inputBuffer, 0, 518);
 			timeout = true;
@@ -375,7 +379,6 @@ VOID bidForLine()
 
 		}
 	}
-	linkedReset = true;
 	return;
 }
 
