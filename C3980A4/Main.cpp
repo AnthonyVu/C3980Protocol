@@ -161,7 +161,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	}
 
 	printStaticInfo();
-	updateInfo();
+	//updateInfo();
 
 	while (GetMessage(&Msg, NULL, 0, 0))
 	{
@@ -184,8 +184,8 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 	timeout = true;
 	KillTimer(hwnd, TIMER_TEST);
 	//MessageBox(hwnd, "Timed out.", "", NULL);
-	numTimeouts++;
-	updateInfo();
+	//numTimeouts++;
+	updateInfo(numTimeouts);
 
 }
 
@@ -349,8 +349,8 @@ VOID sendEnq()
 	}
 	//write success, Increment numENQSent counter
 	else {
-		numENQSent++;
-		updateInfo();
+		//numENQSent++;
+		updateInfo(numENQSent);
 	}
 }
 
@@ -370,8 +370,8 @@ VOID bidForLine()
 			timeout = true;
 
 			//Receive success, increment numACKReceived
-			numACKReceived++;
-			updateInfo();
+			//numACKReceived++;
+			updateInfo(numACKReceived);
 			
 
 			KillTimer(hwnd, TIMER_TEST);
@@ -467,8 +467,8 @@ BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 	else  //WriteFile succeeded, increment numPacketsSent
 	{
 		result = TRUE;
-		numPacketsSent++;
-		updateInfo();
+		//numPacketsSent++;
+		updateInfo(numPacketsSent);
 	}
 	return result;
 }
