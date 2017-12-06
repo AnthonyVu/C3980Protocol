@@ -273,7 +273,7 @@ VOID Idle()
 	{
 		if (linkedReset != false)
 		{
-			startTimer(5000);
+			startTimer(10000);
 			while (!timeout)
 			{
 				//MessageBox(hwnd, "idle", "", MB_OK);
