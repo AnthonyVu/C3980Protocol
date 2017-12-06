@@ -10,3 +10,6 @@ extern HANDLE port;
 
 extern int printRow;
 extern int printColumn;
+
+
+BOOL writeToPort(char*, DWORD);

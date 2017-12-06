@@ -1,13 +1,14 @@
 #pragma once
 #define STRICT
 #include <Windows.h>
+#include <stdint.h>
 
 #define IDT_TIMER1				101
 #define IDT_TIMER2				102
 #define TIMER_TEST				999
 #define TRANSMIT_TIMEOUT		2000
 #define RECEIVE_TIMEOUT			2000
-#define TEST_TIMEOUT			1000
+#define TEST_TIMEOUT			2000
 
 #define MENU_CONNECT			103
 #define MENU_DISCONNECT			104
@@ -30,6 +31,8 @@
 extern bool timeout;
 extern bool linkedReset;
 extern char inputBuffer[];
+extern bool rvi;
+
 
 extern size_t numPacketsSent;
 extern size_t numPacketsReceived;
@@ -40,4 +43,7 @@ extern size_t numENQSent;
 extern size_t numENQReceived;
 extern size_t numTimeouts;
 
-VOID startTimer();
+
+VOID startTimer(unsigned int time);
+BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite);
+

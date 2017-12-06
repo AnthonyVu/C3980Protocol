@@ -111,6 +111,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="crc.h" />
     <ClInclude Include="Header.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="Print.h" />

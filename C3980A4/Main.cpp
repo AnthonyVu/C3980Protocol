@@ -5,12 +5,13 @@ PROGRAM HEADER HERE
 #include <Windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "Header.h"
 #include "Main.h"
 #include "Receive.h"
 #include "Transmit.h"
 #include "Print.h"
-
+#include "crc.h"
 
 char programName[] = "C3980 A4";
 char filePathBuffer[MAX_FILENAME_SIZE];
@@ -40,10 +41,11 @@ int printColumn = 0;
 //Main.cpp function headers
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
-VOID startTimer();
+VOID startTimer(unsigned int time);
 VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
 VOID Idle();
 VOID Acknowledge();
+BOOL Validation(uint32_t receivedCRC, char* input);
 void bidForLine();
 void sendEnq();
 DWORD readThread(LPDWORD);
@@ -52,6 +54,12 @@ BOOL writeToPort(char*, DWORD);
 //bool values used to keep track of timeouts
 extern bool timeout = false;
 extern bool linkedReset = false;
+
+//FILE * outputBuffer = NULL;
+
+char inputBuffer[518] = { 0 };
+extern bool rvi = false;
+
 
 //global counters for protocol statistics
 size_t numPacketsSent = 0;
@@ -63,7 +71,7 @@ size_t numENQSent = 0;
 size_t numENQReceived = 0;
 size_t numTimeouts = 0;
 
-char inputBuffer[518] = {0};
+//char inputBuffer[518] = {0};
 
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
@@ -91,8 +99,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	Wcl.lpszMenuName = "commandMenu";
 	Wcl.cbClsExtra = 0;
 	Wcl.cbWndExtra = 0;
-
-
 	if (!RegisterClassEx(&Wcl))
 		return 0;
 
@@ -122,10 +128,12 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 		//return FALSE;
 	}
 
-	connectMode = true;
-
-	ct.ReadIntervalTimeout = MAXDWORD;
-	//SetCommTimeouts(port, &ct);
+	ct.ReadIntervalTimeout = 500;
+	ct.ReadTotalTimeoutMultiplier = 500;
+	ct.ReadTotalTimeoutConstant = 500;
+	ct.WriteTotalTimeoutMultiplier = 500;
+	ct.WriteTotalTimeoutConstant = 500;
+	SetCommTimeouts(port, &ct);
 
 	//setup device context settings
 	if (!SetupComm(port, 8, 8)) { //is it supposed to be 8?
@@ -165,10 +173,10 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 }
 
 
-VOID startTimer()
+VOID startTimer(unsigned int time)
 {
 	timeout = false;
-	SetTimer(hwnd, TIMER_TEST, TEST_TIMEOUT, TimerProc);
+	SetTimer(hwnd, TIMER_TEST, time, TimerProc);
 }
 
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
@@ -178,6 +186,7 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 	//MessageBox(hwnd, "Timed out.", "", NULL);
 	numTimeouts++;
 	updateInfo();
+
 }
 
 VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped)
@@ -205,20 +214,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 		//Connect menu button pressed, should probably connect before setting connectMode=true
 		case (MENU_CONNECT):
-			
-			if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
-				MessageBox(hwnd, "Could not create readinputbufferthread", "", NULL);
+			if (!connectMode) {
+				connectMode = true;
+
+				if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
+					/* handle error */
+					//return 0;
+					MessageBox(hwnd, "Could not create idleThread", "", NULL);
+				} /* end if (error creating read thread) */
+				if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
+				}
+				//if (ResumeThread(readInputBufferThread) == -1) {
+				//	MessageBox(hwnd, "could not resume readInputBufferThread, my lord", "", NULL);
+				//}
 			}
-			if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
-				/* handle error */
-				//return 0;
-				MessageBox(hwnd, "Could not create idleThread", "", NULL);
-			} /* end if (error creating read thread) */
-			/*
-			if (ResumeThread(readInputBufferThread) == -1) {
-				MessageBox(hwnd, "could not resume readInputBufferThread, my lord", "", NULL);
-			}
-			*/
 			break;
 		//Disconnect menu button pressed
 		case (MENU_DISCONNECT):
@@ -251,7 +260,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		hdc = BeginPaint(hwnd, &paintstruct);
 		break;
 	case WM_CHAR:
-		sendEnq();
+		switch (wParam) {
+		case 114:
+			rvi = true;
+			break;
+		}
 		break;
 	case WM_DESTROY:
 
@@ -267,15 +280,18 @@ VOID Idle()
 {
 	while (true)
 	{
-		if (/*linkedReset*/ false)
+		if (linkedReset != false)
 		{
-			startTimer();
+			startTimer(5000);
 			while (!timeout)
 			{
 				//MessageBox(hwnd, "idle", "", MB_OK);
-				if (inputBuffer != NULL && inputBuffer[1] == 5)
+
+				if (inputBuffer[0] == 22 && inputBuffer[1] == 5)
 				{
 					Acknowledge();
+					break;
+					//memset(inputBuffer, 0, 518);
 				}
 				if (timeout)
 				{
@@ -283,17 +299,24 @@ VOID Idle()
 				}
 			}
 		}
-		if (inputBuffer[0] == 22 && strlen(inputBuffer) > 0)
+		if (inputBuffer[0] == 22 && inputBuffer[1] == 5 && strlen(inputBuffer) > 0)
 		{
-	
-			if (inputBuffer[1] == 5)
-			{
-				Acknowledge();
-				break;
-			}
+			Acknowledge();
+			//memset(inputBuffer, 0, 518);
 		}
 		else if (strlen(inputFileBuffer) > 0)
 		{
+			/*
+			uint32_t test = CRC::Calculate(inputFileBuffer, st, CRC::CRC_32());
+			bool passed = Validation(test, inputFileBuffer);
+			unsigned char bytes[4];
+			unsigned long n = test;
+
+			bytes[0] = (n >> 24) & 0xFF;
+			bytes[1] = (n >> 16) & 0xFF;
+			bytes[2] = (n >> 8) & 0xFF;
+			bytes[3] = n & 0xFF;
+			*/
 			sendEnq();
 			bidForLine();
 			fprintf(stderr, "asdf");
@@ -310,6 +333,8 @@ VOID Acknowledge()
 	//WriteFile(port, control, sizeof(control), &bytesWritten, NULL);
 	Receive();
 }
+
+
 
 VOID sendEnq()
 {
@@ -331,8 +356,8 @@ VOID sendEnq()
 
 VOID bidForLine()
 {
-	MessageBox(hwnd, "Calling bidForLine()", "", NULL);
-	startTimer();
+	//MessageBox(hwnd, "Calling bidForLine()", "", NULL);
+	startTimer(2000);
 	while (timeout != true)
 	{
 		//Received an ACK in inputBuffer
@@ -340,11 +365,17 @@ VOID bidForLine()
 		{
 			memset(inputBuffer, 0, 518);
 			prepareToSend(inputFileBuffer, port);
+			eot = false;
+			memset(inputBuffer, 0, 518);
 			timeout = true;
+
 			//Receive success, increment numACKReceived
 			numACKReceived++;
 			updateInfo();
 			
+
+			KillTimer(hwnd, TIMER_TEST);
+
 		}
 	}
 	linkedReset = true;
@@ -353,7 +384,7 @@ VOID bidForLine()
 
 //thread function to read from input buffer
 DWORD readThread(LPDWORD lpdwParam1)
-{ 
+{
 	DWORD nBytesRead = 0;
 	DWORD dwEvent, dwError;
 	COMSTAT cs;
@@ -366,7 +397,7 @@ DWORD readThread(LPDWORD lpdwParam1)
 	while (connectMode) {
 		if (WaitCommEvent(port, &dwEvent, NULL))
 		{
-			MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
+			//MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
 			ClearCommError(port, &dwError, &cs);
 
 			osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -411,6 +442,7 @@ BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 	//Issue write
 	if (!WriteFile(port, writeBuffer, dwNumToWrite, &dwRes, &osWrite))
 	{
+
 		if (GetLastError() != ERROR_IO_PENDING)
 		{
 			result = FALSE;
@@ -423,7 +455,7 @@ BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 			case WAIT_OBJECT_0:
 				if (!GetOverlappedResult(port, &osWrite, &dwWritten, FALSE))
 					result = FALSE;
-				else 
+				else
 					result = TRUE;
 				break;
 			default:

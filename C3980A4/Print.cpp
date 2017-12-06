@@ -110,7 +110,7 @@ void updateInfo()
 	TextOut(hdc, xPcktData, yPckt, std::to_string(numPacketsSent).std::string::c_str(), strlen(std::to_string(numPacketsSent).std::string::c_str()));
 	TextOut(hdc, xPcktData, yPckt + yOffset, std::to_string(numPacketsReceived).std::string::c_str(), strlen(std::to_string(numPacketsReceived).std::string::c_str()));
 	//Bit error data
-	TextOut(hdc, xBitErrorData, yBitError, std::to_string(numBitErrors).std::string::c_str(), strlen(std::to_string(numBitErrors).std::string::c_str()));
+	TextOut(hdc, xBitErrorData, yBitError, std::to_string(numBitErrors).std::string::c_str(), strlen(std::to_string(numBitErrors).std::string::c_str())) ;
 	//ACK data: sent/rec
 	TextOut(hdc, xACKData, yACK, std::to_string(numACKSent).std::string::c_str(), strlen(std::to_string(numACKSent).std::string::c_str()));
 	TextOut(hdc, xACKData, yACK + yOffset, std::to_string(numACKReceived).std::string::c_str(), strlen(std::to_string(numACKReceived).std::string::c_str()));
