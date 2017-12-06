@@ -74,7 +74,7 @@ void addData()
 	}
 
 	memcpy(temp, &line[2], sizeof(char) * 512);
-	uint32_t crc = CRC::Calculate(temp, strlen(temp), CRC::CRC_32());
+	uint32_t crc = CRC::Calculate(temp, 512, CRC::CRC_32());
 	unsigned long shift = crc;
 	bytes[0] = (shift >> 24) & 0xFF;
 	bytes[1] = (shift >> 16) & 0xFF;
