@@ -50,9 +50,9 @@ char filePathBuffer[MAX_FILENAME_SIZE];
 LPCSTR lpszCommName = "COM1";
 HWND hwnd;
 DCB deviceContext;
+int printRow = 0;
+int printColumn = 0;
 
-HANDLE port;
-HANDLE timerThread;
 
 //OpenFile Global Variables
 HANDLE fileHandle;
@@ -64,12 +64,10 @@ DWORD g_BytesTransferred;
 //idle & readThread handles
 HANDLE idleThread;
 HANDLE readInputBufferThread;
-
+HANDLE port;
+HANDLE timerThread;
 
 bool connectMode = false;
-
-int printRow = 0;
-int printColumn = 0;
 
 //Main.cpp function headers
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -78,7 +76,6 @@ VOID startTimer(unsigned int time);
 VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
 VOID Idle();
 VOID Acknowledge();
-BOOL Validation(uint32_t receivedCRC, char* input);
 void bidForLine();
 void sendEnq();
 DWORD readThread(LPDWORD);
@@ -86,11 +83,11 @@ BOOL writeToPort(char*, DWORD);
 VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped);
 
 //bool values used to keep track of timeouts
-extern bool timeout = false;
-extern bool linkedReset = false;
+bool timeout = false;
+bool linkedReset = false;
 
 char inputBuffer[518] = { 0 };
-extern bool rvi = false;
+bool rvi = false;
 
 //global counters for protocol statistics
 size_t numPacketsSent = 0;
@@ -101,8 +98,6 @@ size_t numACKReceived = 0;
 size_t numENQSent = 0;
 size_t numENQReceived = 0;
 size_t numTimeouts = 0;
-
-//char inputBuffer[518] = {0};
 
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: WinMain
@@ -129,14 +124,13 @@ size_t numTimeouts = 0;
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
 {
 	COMMTIMEOUTS ct = { 0 };
-	char settings[] = "9600,N,8,1"; //"9600,N,8,1"
+	char settings[] = "9600,N,8,1";
 
 	MSG Msg;
 	WNDCLASSEX Wcl;
 	PAINTSTRUCT paintstruct;
 	HDC hdc = BeginPaint(hwnd, &paintstruct);
 
-	//FILE * s;
 	Wcl.cbSize = sizeof(WNDCLASSEX);
 	Wcl.style = CS_HREDRAW | CS_VREDRAW;
 	Wcl.hIcon = LoadIcon(NULL, IDI_APPLICATION);
@@ -177,7 +171,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 		== INVALID_HANDLE_VALUE)
 	{
 		MessageBox(NULL, "Error opening COM port:", "", MB_OK);
-		//return FALSE;
 	}
 
 	//Sets COMSTAT fields
@@ -189,7 +182,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	SetCommTimeouts(port, &ct);
 
 	//setup device context settings
-	if (!SetupComm(port, 8, 8)) { //is it supposed to be 8?
+	if (!SetupComm(port, 8, 8)) {
 		MessageBox(hwnd, "setupComm failed", "", NULL);
 	}
 
@@ -251,44 +244,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;
 	PAINTSTRUCT paintstruct;
-	DWORD threadId; //unused?
-
-					//File Input variables
+	DWORD threadId;
 	DWORD dwBytesRead = 0;
 
 	switch (Message)
 	{
-		//Switch case to handle menu buttons
+	//Switch case to handle menu buttons
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-			//Connect menu button pressed, should probably connect before setting connectMode=true
+		//Connect menu button pressed, should probably connect before setting connectMode=true
 		case (MENU_CONNECT):
 			if (!connectMode) {
 				connectMode = true;
 				updateConnectionStatus();
 
 				if ((idleThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Idle, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
-					/* handle error */
-					//return 0;
 					MessageBox(hwnd, "Could not create idleThread", "", NULL);
-				} /* end if (error creating read thread) */
+				} 
 				if ((readInputBufferThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)readThread, NULL, 0, 0)) == INVALID_HANDLE_VALUE) {
+					MessageBox(hwnd, "Could not create readThread", "", NULL);
 				}
-				//if (ResumeThread(readInputBufferThread) == -1) {
-				//	MessageBox(hwnd, "could not resume readInputBufferThread, my lord", "", NULL);
-				//}
+				
 			}
 			break;
-			//Disconnect menu button pressed
-		case (MENU_DISCONNECT):
-			connectMode = false;
-			break;
-			//Quit menu button pressed
+		//Quit menu button pressed
 		case (MENU_QUIT):
 			PostQuitMessage(0);
 			break;
-			//File menu button pressed
+		//File menu button pressed
 		case (MENU_FILE):
 			if (GetOpenFileName(&ofn) == TRUE)
 			{
@@ -300,7 +284,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 				if (!ReadFileEx(fileHandle, inputFileBuffer, sizeof(inputFileBuffer) - 1, &ol, FileIOCompletionRoutine))
 				{
-					//DisplayError(TEXT("ReadFile"));
 					MessageBox(hwnd, inputFileBuffer, "", NULL);
 				}
 				CloseHandle(fileHandle);
@@ -378,7 +361,6 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 	//Timeout has occurred
 	timeout = true;
 	KillTimer(hwnd, TIMER_TEST);
-	//MessageBox(hwnd, "Timed out.", "", NULL);
 	//numTimeouts++;
 	updateInfo(&numTimeouts);
 
@@ -442,14 +424,11 @@ VOID Idle()
 			startTimer(2001);
 			while (!timeout)
 			{
-				//MessageBox(hwnd, "idle", "", MB_OK);
-
 				if (inputBuffer[0] == SYN && inputBuffer[1] == ENQ)
 				{
 					Acknowledge();
 					linkedReset = false;
 					break;
-					//memset(inputBuffer, 0, 518);
 				}
 				if (timeout)
 				{
@@ -457,26 +436,13 @@ VOID Idle()
 				}
 			}
 		}
-
 		if (inputBuffer[0] == SYN && inputBuffer[1] == ENQ)
 		{
 			Acknowledge();
 			linkedReset = false;
-			//memset(inputBuffer, 0, 518);
 		}
 		else if (strlen(inputFileBuffer) > 0)
 		{
-			/*
-			uint32_t test = CRC::Calculate(inputFileBuffer, st, CRC::CRC_32());
-			bool passed = Validation(test, inputFileBuffer);
-			unsigned char bytes[4];
-			unsigned long n = test;
-
-			bytes[0] = (n >> 24) & 0xFF;
-			bytes[1] = (n >> 16) & 0xFF;
-			bytes[2] = (n >> 8) & 0xFF;
-			bytes[3] = n & 0xFF;
-			*/
 			sendEnq();
 			bidForLine();
 			fprintf(stderr, "asdf");
@@ -538,7 +504,6 @@ VOID sendEnq()
 	enq[0] = 22;
 	enq[1] = 5;
 	bool write = writeToPort(enq, 2);
-	//bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
 	if (!write) {
 		MessageBox(hwnd, "sendEnq failed", "", MB_OK);
 	}
@@ -571,7 +536,6 @@ VOID sendEnq()
 ----------------------------------------------------------------------------------------------------------------------*/
 VOID bidForLine()
 {
-	//MessageBox(hwnd, "Calling bidForLine()", "", NULL);
 	startTimer(2000);
 	while (timeout != true)
 	{
@@ -629,9 +593,7 @@ DWORD readThread(LPDWORD lpdwParam1)
 	while (connectMode) {
 		if (WaitCommEvent(port, &dwEvent, NULL))
 		{
-			//MessageBox(hwnd, "I have received an event, m'lord!", "", NULL);
 			ClearCommError(port, &dwError, &cs);
-
 			osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 			if (osReader.hEvent == NULL)
 			{
@@ -641,16 +603,7 @@ DWORD readThread(LPDWORD lpdwParam1)
 
 			if ((dwEvent & EV_RXCHAR) && cs.cbInQue)
 			{
-				if (!ReadFile(port, inputBuffer, sizeof(inputBuffer), &nBytesRead, &osReader)) //need receive buffer to be extern to access
-				{
-					//error case, handle error here
-					int i = 0;
-				}
-				else
-				{
-					//handle success
-					int u = 0;
-				}
+				ReadFile(port, inputBuffer, sizeof(inputBuffer), &nBytesRead, &osReader);
 				updateInfo(&numPacketsReceived);
 			}
 		}
@@ -691,7 +644,6 @@ BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 	{
 		return FALSE;
 	}
-
 	//Issue write
 	if (!WriteFile(port, writeBuffer, dwNumToWrite, &dwRes, &osWrite))
 	{
