@@ -426,7 +426,7 @@ VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTr
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: Idle
 --
 -- DATE: December 3, 2017
 --
@@ -434,20 +434,17 @@ VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTr
 --
 -- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: VOID Idle()
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: VOID
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function is used to wait for the user to be ready to send data frames to the other user, or for another user to be ask for control
+-- of the line to send frames to the user(ourselves). If the user is ready to send data frames, the function will send an enq frame to ask for control
+-- of the line. If the user has sent an enq and does not receive and ack, or the user has completed sending 10 frames, the function will wait 2 seconds before
+-- they can bid for the line again where another user can begin sending frames to the user(ourselves).
 ----------------------------------------------------------------------------------------------------------------------*/
 VOID Idle()
 {
@@ -501,7 +498,7 @@ VOID Idle()
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: Acknowledge
 --
 -- DATE: December 3, 2017
 --
@@ -509,20 +506,15 @@ VOID Idle()
 --
 -- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Anthony Vu
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: VOID Acknowledge()
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: VOID
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function is used to send an ack frame to communicate that the user is ready to receive data frames and then goes to 
+-- receive state to listen for the data frames.
 ----------------------------------------------------------------------------------------------------------------------*/
 VOID Acknowledge()
 {
@@ -530,36 +522,28 @@ VOID Acknowledge()
 	control[0] = 22;
 	control[1] = 6;
 	bool write = writeToPort(control, 2);
-	//WriteFile(port, control, sizeof(control), &bytesWritten, NULL);
 	Receive();
 }
 
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: sendEnq
 --
 -- DATE: December 3, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS: None
 --
 -- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Haley Booker
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: VOID sendEnq()
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: VOID
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function is used to send and enq frame to the other user to ask for control of the line to send data frames. 
 ----------------------------------------------------------------------------------------------------------------------*/
-
 VOID sendEnq()
 {
 	DWORD dwBytesWritten;
@@ -569,7 +553,7 @@ VOID sendEnq()
 	bool write = writeToPort(enq, 2);
 	//bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
 	if (!write) {
-		MessageBox(hwnd, "i suck  at writefile", "", MB_OK);
+		MessageBox(hwnd, "sendEnq failed", "", MB_OK);
 	}
 	//write success, Increment numENQSent counter
 	else {
@@ -579,30 +563,25 @@ VOID sendEnq()
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: bidForLine
 --
 -- DATE: December 3, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS: None
 --
 -- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Haley Booker
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: VOID bidForLine()
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: VOID
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function is used to wait for an acknowledgment from the receiver to communicate that they are ready to receive data. Upon receiving an 
+-- ack, data frames can now be sent to the receiver. If the timer ends before the ack has been received the function returns and goes to the idle state
+-- with linkReset set to true so the sender cannot bid for the line again instantly.
 ----------------------------------------------------------------------------------------------------------------------*/
-
 VOID bidForLine()
 {
 	//MessageBox(hwnd, "Calling bidForLine()", "", NULL);
@@ -631,28 +610,23 @@ VOID bidForLine()
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: readThread
 --
 -- DATE: December 3, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS: None
 --
 -- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Wilson Hu
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: DWORD readThread(LPDWORD lpdwParam1)
+--						LPDWORD lpdwParam1 - unused thread param
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: DWORD - the number of Bytes written to the port
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function is used to listen to the port for received data with event driven flow.
 ----------------------------------------------------------------------------------------------------------------------*/
 DWORD readThread(LPDWORD lpdwParam1)
 {
@@ -699,28 +673,24 @@ DWORD readThread(LPDWORD lpdwParam1)
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: writeToPort
 --
 -- DATE: December 3, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS: None
 --
 -- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Wilson Hu
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
+--					char* writeBuffer - pointer to the char array to be sent through the port
+--					DWORD dwNumToWrite - number of Bytes to write to the port
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: BOOL - return true if the write to the port was successful, false otherwise
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function is used to send a char array through the port to the receiver.
 ----------------------------------------------------------------------------------------------------------------------*/
 BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 {
