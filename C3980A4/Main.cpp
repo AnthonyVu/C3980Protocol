@@ -185,7 +185,7 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 	KillTimer(hwnd, TIMER_TEST);
 	//MessageBox(hwnd, "Timed out.", "", NULL);
 	//numTimeouts++;
-	updateInfo(numTimeouts);
+	updateInfo(&numTimeouts);
 
 }
 
@@ -300,7 +300,7 @@ VOID Idle()
 				}
 			}
 		}
-		if (inputBuffer[0] == 22 && inputBuffer[1] == 5 && strlen(inputBuffer) > 0)
+		if (inputBuffer[0] == 22 && inputBuffer[1] == 5)
 		{
 			Acknowledge();
 			linkedReset = false;
@@ -352,7 +352,7 @@ VOID sendEnq()
 	//write success, Increment numENQSent counter
 	else {
 		//numENQSent++;
-		updateInfo(numENQSent);
+		updateInfo(&numENQSent);
 	}
 }
 
@@ -374,7 +374,7 @@ VOID bidForLine()
 
 			//Receive success, increment numACKReceived
 			//numACKReceived++;
-			updateInfo(numACKReceived);
+			updateInfo(&numACKReceived);
 			
 
 			KillTimer(hwnd, TIMER_TEST);
@@ -470,7 +470,7 @@ BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 	{
 		result = TRUE;
 		//numPacketsSent++;
-		updateInfo(numPacketsSent);
+		updateInfo(&numPacketsSent);
 	}
 	return result;
 }

@@ -65,7 +65,7 @@ void addData()
 
 	while (count != 514)
 	{
-		if (eof == false && *filePtr != EOF)
+		if (eof == false && *filePtr != 0)
 		{
 			line[count] = *filePtr;
 			filePtr++;
@@ -73,8 +73,7 @@ void addData()
 		else
 		{
 			eof = true;
-			eot = true;
-			line[count] = '\0';
+			line[count] = 0;
 		}
 		count++;
 	}
@@ -86,7 +85,7 @@ void addData()
 	bytes[1] = (shift >> 16) & 0xFF;
 	bytes[2] = (shift >> 8) & 0xFF;
 	bytes[3] = shift & 0xFF;
-	addCRC(line, bytes);
+  	addCRC(line, bytes);
 }
 
 void send(HANDLE port)
@@ -108,10 +107,14 @@ void send(HANDLE port)
 		else
 		{
 			//send line frame
-			bool bwrite = writeToPort(line, strlen(line));
+			bool bwrite = writeToPort(line, 518);
 
 			while (timeout == false)
 			{
+				if (eof)
+				{
+					eot = true;
+				}
 				if (inputBuffer[0] == 22)
 				{
 					if (inputBuffer[1] == 6)
