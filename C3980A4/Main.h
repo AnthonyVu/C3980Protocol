@@ -25,4 +25,3 @@ extern bool rvi;
 
 VOID startTimer(unsigned int time);
 BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite);
-BOOL Validation(char* input);

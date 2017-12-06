@@ -121,7 +121,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 		return FALSE;
 	}
 
-	connectMode = true;
+	
 
 	ct.ReadIntervalTimeout = 500;
 	ct.ReadTotalTimeoutMultiplier = 500;
@@ -328,26 +328,6 @@ VOID Acknowledge()
 }
 
 
-BOOL Validation(char* input)
-{
-	char temp[512];
-	unsigned char bytes[4];
-	memcpy(temp, &input[2], sizeof(int) * 512);
-	uint32_t crc = CRC::Calculate(temp, strlen(temp), CRC::CRC_32());
-	unsigned long shift = crc;
-	bytes[0] = (shift >> 24) & 0xFF;
-	bytes[1] = (shift >> 16) & 0xFF;
-	bytes[2] = (shift >> 8) & 0xFF;
-	bytes[3] = shift & 0xFF;
-	for (int i = 0, j = 514; i < 4; i++, j++)
-	{
-		if (bytes[i] != temp[j])
-		{
-			return false;
-		}
-	}
-	return true;
-}
 
 VOID sendEnq()
 {
