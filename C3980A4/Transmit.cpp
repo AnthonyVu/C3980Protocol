@@ -113,7 +113,7 @@ void send(HANDLE port)
 			{
 				if (inputBuffer[0] == 22)
 				{
-					if (inputBuffer[1] == 6)
+					if (inputBuffer[1] == ACK)//6
 					{
 						sent++;
 						//printT();
@@ -124,7 +124,7 @@ void send(HANDLE port)
 						}
 						return;
 					}
-					if (inputBuffer[1] == 7)
+					if (inputBuffer[1] == BEL)//7
 					{
 						rviSent = true;
 						filePtr = filePtr - 512;
