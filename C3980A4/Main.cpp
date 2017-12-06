@@ -14,8 +14,9 @@ PROGRAM HEADER HERE
 #include "crc.h"
 
 char programName[] = "C3980 A4";
-char filePathBuffer[128];
+char filePathBuffer[MAX_FILENAME_SIZE];
 LPCSTR lpszCommName = "COM1";
+HWND hwnd;
 DCB deviceContext;
 
 HANDLE port;
@@ -24,19 +25,20 @@ HANDLE timerThread;
 //OpenFile Global Variables
 HANDLE fileHandle;
 OPENFILENAME ofn;
-char inputFileBuffer[32768];
+char inputFileBuffer[MAX_FILE_SIZE];
 OVERLAPPED ol;
 DWORD g_BytesTransferred;
 
+//idle & readThread handles
 HANDLE idleThread;
 HANDLE readInputBufferThread;
 
-HWND hwnd;
+
 boolean connectMode = false;
 int printRow = 0;
 int printColumn = 0;
 
-//Function Headers
+//Main.cpp function headers
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
 VOID startTimer(unsigned int time);
@@ -49,22 +51,27 @@ void sendEnq();
 DWORD readThread(LPDWORD);
 BOOL writeToPort(char*, DWORD);
 
-
+//bool values used to keep track of timeouts
 extern bool timeout = false;
 extern bool linkedReset = false;
+
 //FILE * outputBuffer = NULL;
 
 char inputBuffer[518] = { 0 };
 extern bool rvi = false;
 
 
-//bool timeout;
-//char* inputBuffer;
+//global counters for protocol statistics
+size_t numPacketsSent = 0;
+size_t numPacketsReceived = 0;
+size_t numBitErrors = 0;
+size_t numACKSent = 0;
+size_t numACKReceived = 0;
+size_t numENQSent = 0;
+size_t numENQReceived = 0;
+size_t numTimeouts = 0;
 
-
-
-//Initialize OPENFILENAME
-
+//char inputBuffer[518] = {0};
 
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam, int nCmdShow)
@@ -118,7 +125,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 		== INVALID_HANDLE_VALUE)
 	{
 		MessageBox(NULL, "Error opening COM port:", "", MB_OK);
-		return FALSE;
+		//return FALSE;
 	}
 
 	ct.ReadIntervalTimeout = 500;
@@ -153,6 +160,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 		MessageBox(hwnd, "setCommState failed", "", NULL);
 	}
 
+	printStaticInfo();
+	updateInfo();
 
 	while (GetMessage(&Msg, NULL, 0, 0))
 	{
@@ -163,6 +172,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 	return Msg.wParam;
 }
 
+
 VOID startTimer(unsigned int time)
 {
 	timeout = false;
@@ -170,9 +180,13 @@ VOID startTimer(unsigned int time)
 }
 
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
+	//Timeout has occurred
 	timeout = true;
 	KillTimer(hwnd, TIMER_TEST);
 	//MessageBox(hwnd, "Timed out.", "", NULL);
+	numTimeouts++;
+	updateInfo();
+
 }
 
 VOID CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransferred, LPOVERLAPPED lpOverlapped)
@@ -194,11 +208,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 	switch (Message)
 	{
-		//Switch case to handle menu buttons
+	//Switch case to handle menu buttons
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-			//Connect menu button pressed, should probably connect before setting connectMode=true
+		//Connect menu button pressed, should probably connect before setting connectMode=true
 		case (MENU_CONNECT):
 			if (!connectMode) {
 				connectMode = true;
@@ -215,15 +229,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				//}
 			}
 			break;
-			//Disconnect menu button pressed
+		//Disconnect menu button pressed
 		case (MENU_DISCONNECT):
 			connectMode = false;
 			break;
-			//Quit menu button pressed
+		//Quit menu button pressed
 		case (MENU_QUIT):
 			PostQuitMessage(0);
 			break;
-			//File menu button pressed
+		//File menu button pressed
 		case (MENU_FILE):
 			if (GetOpenFileName(&ofn) == TRUE)
 			{
@@ -237,12 +251,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				{
 					//DisplayError(TEXT("ReadFile"));
 					MessageBox(hwnd, inputFileBuffer, "", NULL);
-					//printf("%s", inputFileBuffer);
 				}
-				//if (dwBytesRead > 0 && dwBytesRead <= sizeof(inputFileBuffer) - 1)
-				//{
-					//sprintf_s(inputFileBuffer, "%s", fileHandle);
-				//}
 			}
 			break;
 		}
@@ -333,13 +342,16 @@ VOID sendEnq()
 	char enq[2];
 	enq[0] = 22;
 	enq[1] = 5;
-	//PurgeComm(port, PURGE_RXCLEAR);
 	bool write = writeToPort(enq, 2);
 	//bool bwrite = WriteFile(port, enq, 2, &dwBytesWritten, NULL);
 	if (!write) {
 		MessageBox(hwnd, "i suck  at writefile", "", MB_OK);
 	}
-	//PurgeComm(port, PURGE_RXCLEAR);
+	//write success, Increment numENQSent counter
+	else {
+		numENQSent++;
+		updateInfo();
+	}
 }
 
 VOID bidForLine()
@@ -348,7 +360,7 @@ VOID bidForLine()
 	startTimer(2000);
 	while (timeout != true)
 	{
-		//MessageBox(hwnd, "bid", "", MB_OK);
+		//Received an ACK in inputBuffer
 		if (inputBuffer[0] == 22 && inputBuffer[1] == 6)
 		{
 			memset(inputBuffer, 0, 518);
@@ -356,7 +368,14 @@ VOID bidForLine()
 			eot = false;
 			memset(inputBuffer, 0, 518);
 			timeout = true;
+
+			//Receive success, increment numACKReceived
+			numACKReceived++;
+			updateInfo();
+			
+
 			KillTimer(hwnd, TIMER_TEST);
+
 		}
 	}
 	linkedReset = true;
@@ -407,11 +426,6 @@ DWORD readThread(LPDWORD lpdwParam1)
 	return nBytesRead;
 }
 
-BOOL readFromBuffer()
-{
-	return FALSE;
-}
-
 BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 {
 	OVERLAPPED osWrite = { 0 };
@@ -450,9 +464,11 @@ BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 			}
 		}
 	}
-	else  //WriteFile succeeded
+	else  //WriteFile succeeded, increment numPacketsSent
 	{
 		result = TRUE;
+		numPacketsSent++;
+		updateInfo();
 	}
 	return result;
 }

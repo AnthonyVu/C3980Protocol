@@ -18,10 +18,32 @@
 #define windowHeight			900
 #define windowWidth				1200
 
+#define MAX_FILE_SIZE			32768
+#define MAX_FILENAME_SIZE		128
+
+#define ENQ						5
+#define ACK						6
+#define SYN						22
+#define STX						2
+#define EOT						4
+#define BEL						7
+
 extern bool timeout;
 extern bool linkedReset;
 extern char inputBuffer[];
 extern bool rvi;
 
+
+extern size_t numPacketsSent;
+extern size_t numPacketsReceived;
+extern size_t numBitErrors;
+extern size_t numACKSent;
+extern size_t numACKReceived;
+extern size_t numENQSent;
+extern size_t numENQReceived;
+extern size_t numTimeouts;
+
+
 VOID startTimer(unsigned int time);
 BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite);
+
