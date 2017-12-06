@@ -72,6 +72,11 @@ void print() {
 	int currentWindowWidth;
 	int charHeight;
 	SIZE length;
+	RECT textRect;
+	textRect.top = yDataStart;
+	textRect.left = xDataStart;
+	textRect.right = xDataEnd;
+	textRect.bottom = yDataEnd;
 	
 
 	GetTextMetrics(dc, &tm);
@@ -110,6 +115,7 @@ void print() {
 			if (printColumn > yDataEnd - 25) {
 				printColumn = 0;
 				printRow += charHeight;
+				InvalidateRect(hwnd, &textRect, TRUE);
 			}
 			if (printRow >= rect.bottom - 25) {
 				InvalidateRect(hwnd, &rect, TRUE);
