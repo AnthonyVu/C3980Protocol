@@ -6,7 +6,7 @@
 
 void Receive() {
 	DWORD bitsWritten;
-	startTimer(5000);
+	startTimer(2000);
 	memset(inputBuffer, 0, 518);
 	while (!timeout) {
 		if (inputBuffer[0] == 22) {
@@ -39,7 +39,7 @@ void Receive() {
 					ack[0] = 22;
 					ack[1] = 6;
 					writeToPort(ack, 2);
-					startTimer(5000);
+					startTimer(2000);
 					memset(inputBuffer, 0, 518);
 				}
 			}

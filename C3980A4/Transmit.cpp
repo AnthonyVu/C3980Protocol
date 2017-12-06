@@ -90,7 +90,7 @@ void send(HANDLE port)
 	while (retransmitCount < 3)
 	{
 		//KillTimer(hwnd, TIMER_TEST);
-		startTimer(5000);
+		startTimer(2000);
 		timeout = false;
 		if (eot == true)
 		{
@@ -118,6 +118,7 @@ void send(HANDLE port)
 					if (inputBuffer[1] == 7)
 					{
 						rviSent = true;
+						sent = 0;
 						return;
 					}
 				}
