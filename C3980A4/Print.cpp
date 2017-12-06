@@ -1,47 +1,36 @@
 /*------------------------------------------------------------------------------------------------------------------
--- SOURCE FILE: InotifyDaemon.c - An application that will monitor a specified
--- directory for file creation/modification.
+-- SOURCE FILE: Print.cpp - Handles the printing of data frames and statistics of the amount of successfull and unsuccessful
+-- frames received and sent. 
 --
--- PROGRAM: inotd
+-- PROGRAM: C3980A4
 --
 -- FUNCTIONS:
--- void daemonize (void)
--- int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int ProcessFiles (char pathname[MAXPATHLEN])
--- unsigned int GetProcessID (char *process)
+-- void print()
+-- void printStaticInfo()
+-- void updateInfo(size_t* counter)
 --
 --
 -- DATE: December 3, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS: None
 --
 -- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Matthew Shew, Wilson Hu
 --
 -- NOTES:
--- The program will monitor a directory that is specified in a configuration file for any type of file
--- modification activity (creation, read/write, deletion). The design uses the “inotify” kernel-level
--- utility to obtain the file system event notification. The “select” system call is used to monitor
--- the watch descriptor (returned from inotify).
---
--- Once select is triggered, the directory under watch is processed to determine the exact type of
--- file activity. Once the created/modified files have been identified, they are moved to a separate
--- archive directory. Before the archival process takes place, the system process table (/proc) is
--- searched to verify that the modifying process is currently active and running.
---
--- Note that the application once invoked, will continue to execute as a daemon.
-----------------------------------------------------------------------------------------------------------------------*/#include "Header.h"
+-- This file handles the printing of data frames and statistics of the amount of successfull and unsuccessful
+-- frames received and sent. 
+----------------------------------------------------------------------------------------------------------------------*/
+#include "Header.h"
 #include "Print.h"
 #include "Main.h"
 #include <string.h>
 #include <stdio.h>
 #include <string>
 #include <cstring>
-
-
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: print
 --
 -- DATE: December 3, 2017
 --
@@ -49,20 +38,14 @@
 --
 -- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Matthew Shew
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: void print()
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: void
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function is used to print the current data frame contents to the screen for the user. 
 ----------------------------------------------------------------------------------------------------------------------*/
 void print() {
 	HDC dc = GetDC(hwnd);
@@ -77,19 +60,12 @@ void print() {
 	textRect.left = xDataStart;
 	textRect.right = xDataEnd;
 	textRect.bottom = yDataEnd;
-	
-
 	GetTextMetrics(dc, &tm);
 	charHeight = tm.tmExternalLeading + tm.tmHeight;
-
 	GetWindowRect(hwnd, &rect);
 	currentWindowWidth = rect.right - rect.left;
-	 
-
 	int nullCount = 0;
 	char buff[2];
-	
-
 	for (int i = 2; i < 514; i++) {
 		if (inputBuffer[i] == NULL) {
 			nullCount++;
@@ -132,28 +108,22 @@ void print() {
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: printStaticInfo
 --
 -- DATE: December 3, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS: None
 --
 -- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Wilson Hu
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: void printStaticInfo()
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: void
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function is used to print the statistics of successful and unsuccessful transmitted and received frames to and from another user. 
 ----------------------------------------------------------------------------------------------------------------------*/
 void printStaticInfo()
 {
@@ -184,28 +154,23 @@ void printStaticInfo()
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: initialize_inotify_watch
+-- FUNCTION: updateInfo
 --
 -- DATE: December 3, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS: None
 --
 -- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Wilson Hu
 --
--- INTERFACE: int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int fd: the descriptor returned by inotify_init()
--- char pathname[MAXPATHLEN]: fully qualified pathname of
--- directory to be watched.
+-- INTERFACE: void updateInfo(size_t* counter)
+--						size_t* counter - 
 --
--- RETURNS: Returns the watch descriptor (wd), which is bound to fd and the
--- directory pathname.
+-- RETURNS: void
 --
 -- NOTES:
--- This function is used to generate a watch descriptor using a initialized descriptor from
--- inotify_init and a specified pathname. This watch descriptor can then be used by the select call
--- to monitor for events, i.e., file activity inside the watched directory.
+-- This function is used to update the statistics on the screen for the user. 
 ----------------------------------------------------------------------------------------------------------------------*/
 void updateInfo(size_t* counter)
 {
