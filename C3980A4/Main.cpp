@@ -285,7 +285,7 @@ VOID Idle()
 			{
 				//MessageBox(hwnd, "idle", "", MB_OK);
 
-				if (inputBuffer[0] == 22 && inputBuffer[1] == 5)
+				if (inputBuffer[0] == SYN && inputBuffer[1] == ENQ)
 				{
 					Acknowledge();
 					break;
@@ -297,7 +297,7 @@ VOID Idle()
 				}
 			}
 		}
-		if (inputBuffer[0] == 22 && inputBuffer[1] == 5 && strlen(inputBuffer) > 0)
+		if (inputBuffer[0] == SYN && inputBuffer[1] == ENQ && strlen(inputBuffer) > 0)
 		{
 			Acknowledge();
 			//memset(inputBuffer, 0, 518);
@@ -359,7 +359,7 @@ VOID bidForLine()
 	while (timeout != true)
 	{
 		//Received an ACK in inputBuffer
-		if (inputBuffer[0] == 22 && inputBuffer[1] == 6)
+		if (inputBuffer[0] == SYN && inputBuffer[1] == ACK)
 		{
 			memset(inputBuffer, 0, 518);
 			prepareToSend(inputFileBuffer, port);
