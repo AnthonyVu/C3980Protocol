@@ -282,7 +282,7 @@ VOID Idle()
 	{
 		if (linkedReset != false)
 		{
-			startTimer(10000);
+			startTimer(2001);
 			while (!timeout)
 			{
 				//MessageBox(hwnd, "idle", "", MB_OK);
@@ -290,6 +290,7 @@ VOID Idle()
 				if (inputBuffer[0] == 22 && inputBuffer[1] == 5)
 				{
 					Acknowledge();
+					linkedReset = false;
 					break;
 					//memset(inputBuffer, 0, 518);
 				}
@@ -302,6 +303,7 @@ VOID Idle()
 		if (inputBuffer[0] == 22 && inputBuffer[1] == 5 && strlen(inputBuffer) > 0)
 		{
 			Acknowledge();
+			linkedReset = false;
 			//memset(inputBuffer, 0, 518);
 		}
 		else if (strlen(inputFileBuffer) > 0)
@@ -365,6 +367,7 @@ VOID bidForLine()
 		{
 			memset(inputBuffer, 0, 518);
 			prepareToSend(inputFileBuffer, port);
+			linkedReset = true;
 			eot = false;
 			memset(inputBuffer, 0, 518);
 			timeout = true;
@@ -378,7 +381,6 @@ VOID bidForLine()
 
 		}
 	}
-	linkedReset = true;
 	return;
 }
 

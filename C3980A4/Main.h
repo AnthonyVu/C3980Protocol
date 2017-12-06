@@ -33,7 +33,6 @@ extern bool linkedReset;
 extern char inputBuffer[];
 extern bool rvi;
 
-
 extern size_t numPacketsSent;
 extern size_t numPacketsReceived;
 extern size_t numBitErrors;

@@ -13,6 +13,8 @@ extern char control[2] = { 0 };
 extern char line[518] = { 0 };
 extern char * filePtr = NULL;
 bool rviSent = false;
+bool eof = false;
+
 
 void prepareToSend(char *outputBuffer, HANDLE port)
 {
@@ -46,15 +48,19 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 			return;
 		}
 	}
+	if (eof)
+	{
+		filePtr = NULL;
+		outputBuffer = NULL;
+	}
 }
 
 void addData()
 {
 	char temp[512];
 	size_t n = 0;
-	int c;
 	int count = 2;
-	bool eof = false;
+	eof = false;
 	unsigned char bytes[4] = {0};
 
 	while (count != 514)
@@ -118,6 +124,7 @@ void send(HANDLE port)
 					if (inputBuffer[1] == 7)
 					{
 						rviSent = true;
+						filePtr = filePtr - 512;
 						sent = 0;
 						return;
 					}
@@ -126,6 +133,7 @@ void send(HANDLE port)
 			retransmitCount++;
 		}
 	}
+	filePtr = filePtr - 512;
 	eot = true;
 	return;
 }
