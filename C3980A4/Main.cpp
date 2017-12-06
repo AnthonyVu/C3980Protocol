@@ -121,8 +121,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspszCmdParam
 		return FALSE;
 	}
 
-	
-
 	ct.ReadIntervalTimeout = 500;
 	ct.ReadTotalTimeoutMultiplier = 500;
 	ct.ReadTotalTimeoutConstant = 500;
