@@ -11,11 +11,11 @@
 -- unsigned int GetProcessID (char *process)
 --
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -51,11 +51,11 @@ bool eof = false;
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -114,11 +114,11 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -171,11 +171,11 @@ void addData()
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017 
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -247,11 +247,11 @@ void send(HANDLE port)
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --

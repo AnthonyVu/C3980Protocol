@@ -11,11 +11,11 @@
 -- unsigned int GetProcessID (char *process)
 --
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -43,11 +43,11 @@
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -134,11 +134,11 @@ void print() {
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
@@ -186,11 +186,11 @@ void printStaticInfo()
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: initialize_inotify_watch
 --
--- DATE: March 16, 2008
+-- DATE: December 3, 2017
 --
 -- REVISIONS: (Date and Description)
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Matthew Shew, Anthony Vu, Wilson Hu, Haley Booker
 --
 -- PROGRAMMER: Aman Abdulla
 --
