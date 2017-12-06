@@ -20,6 +20,7 @@
 extern bool timeout;
 extern bool linkedReset;
 extern char inputBuffer[];
+extern bool rvi;
 
 VOID startTimer(unsigned int time);
 BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite);
