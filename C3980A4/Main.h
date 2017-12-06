@@ -24,4 +24,4 @@ extern char inputBuffer[];
 
 VOID startTimer(unsigned int time);
 BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite);
-BOOL Validation(uint32_t receivedCRC, char* input);
+BOOL Validation(char* input);
