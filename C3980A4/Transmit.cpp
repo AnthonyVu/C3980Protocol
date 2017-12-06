@@ -33,7 +33,7 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 			if (eof)
 			{
 				filePtr = NULL;
-				free(inputFileBuffer);
+				memset(inputFileBuffer, 0, MAX_FILE_SIZE);
 			}
 		}
 		else
