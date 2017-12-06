@@ -33,7 +33,7 @@ void prepareToSend(char *outputBuffer, HANDLE port)
 			if (eof)
 			{
 				filePtr = NULL;
-				outputBuffer = NULL;
+				free(inputFileBuffer);
 			}
 		}
 		else

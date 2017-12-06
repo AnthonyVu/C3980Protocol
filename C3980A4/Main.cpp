@@ -25,7 +25,7 @@ HANDLE timerThread;
 //OpenFile Global Variables
 HANDLE fileHandle;
 OPENFILENAME ofn;
-char inputFileBuffer[MAX_FILE_SIZE];
+extern char inputFileBuffer[MAX_FILE_SIZE] = {0};
 OVERLAPPED ol;
 DWORD g_BytesTransferred;
 
