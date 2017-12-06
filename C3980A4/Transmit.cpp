@@ -1,23 +1,23 @@
 /*------------------------------------------------------------------------------------------------------------------
--- SOURCE FILE: InotifyDaemon.c - An application that will monitor a specified
--- directory for file creation/modification.
+-- SOURCE FILE: Transmit.cpp - Handles the sending responsibilities of
+--							the protocol
 --
--- PROGRAM: inotd
+-- PROGRAM: c3980A4
 --
 -- FUNCTIONS:
--- void daemonize (void)
--- int initialize_inotify_watch (int fd, char pathname[MAXPATHLEN])
--- int ProcessFiles (char pathname[MAXPATHLEN])
--- unsigned int GetProcessID (char *process)
+-- void prepareToSend(char *outputBuffer, HANDLE port)
+-- void addData()
+-- void send(HANDLE port)
+-- VOID addCRC(char* data, unsigned char* crc)
 --
 --
--- DATE: March 16, 2008
+-- DATE: December 5, 2017
 --
--- REVISIONS: (Date and Description)
+-- REVISIONS: 
 --
--- DESIGNER: Aman Abdulla
+-- DESIGNER: Haley Booker, Wilson Hu, Anthony Vu, Matthew Shew
 --
--- PROGRAMMER: Aman Abdulla
+-- PROGRAMMER: Haley Booker, Anthony Vu
 --
 -- NOTES:
 -- The program will monitor a directory that is specified in a configuration file for any type of file
