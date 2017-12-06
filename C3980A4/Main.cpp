@@ -35,6 +35,7 @@ HANDLE readInputBufferThread;
 
 
 boolean connectMode = false;
+
 int printRow = 0;
 int printColumn = 0;
 
@@ -55,11 +56,8 @@ BOOL writeToPort(char*, DWORD);
 extern bool timeout = false;
 extern bool linkedReset = false;
 
-//FILE * outputBuffer = NULL;
-
 char inputBuffer[518] = { 0 };
 extern bool rvi = false;
-
 
 //global counters for protocol statistics
 size_t numPacketsSent = 0;
@@ -185,7 +183,7 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
 	KillTimer(hwnd, TIMER_TEST);
 	//MessageBox(hwnd, "Timed out.", "", NULL);
 	//numTimeouts++;
-	updateInfo(numTimeouts);
+	updateInfo(&numTimeouts);
 
 }
 
@@ -352,7 +350,7 @@ VOID sendEnq()
 	//write success, Increment numENQSent counter
 	else {
 		//numENQSent++;
-		updateInfo(numENQSent);
+		updateInfo(&numENQSent);
 	}
 }
 
@@ -374,8 +372,7 @@ VOID bidForLine()
 
 			//Receive success, increment numACKReceived
 			//numACKReceived++;
-			updateInfo(numACKReceived);
-			
+			updateInfo(&numACKReceived);
 
 			KillTimer(hwnd, TIMER_TEST);
 
@@ -421,6 +418,7 @@ DWORD readThread(LPDWORD lpdwParam1)
 					//handle success
 					int u = 0;
 				}
+				updateInfo(&numPacketsReceived);
 			}
 		}
 		PurgeComm(port, PURGE_RXCLEAR);
@@ -470,7 +468,7 @@ BOOL writeToPort(char* writeBuffer, DWORD dwNumToWrite)
 	{
 		result = TRUE;
 		//numPacketsSent++;
-		updateInfo(numPacketsSent);
+		updateInfo(&numPacketsSent);
 	}
 	return result;
 }

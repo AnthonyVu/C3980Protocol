@@ -34,5 +34,5 @@
 
 void print();
 void printStaticInfo();
-void updateInfo(size_t);
+void updateInfo(size_t*);
 

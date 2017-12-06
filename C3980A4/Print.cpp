@@ -95,7 +95,7 @@ void printStaticInfo()
 /*
 updateInfo() header here
 */
-void updateInfo(size_t counter)
+void updateInfo(size_t* counter)
 {
 	HDC hdc = GetDC(hwnd);
 	RECT rect;
@@ -105,9 +105,9 @@ void updateInfo(size_t counter)
 	rect.bottom = windowHeight - yOffset;
 	HRGN region = CreateRectRgn(rect.left, rect.top, rect.right, rect.bottom);
 
-	counter++;
+	(*counter)++;
 
-	char text[2];
+	char text[4];
 	
 	RedrawWindow(hwnd, &rect, region, RDW_INTERNALPAINT);
 
